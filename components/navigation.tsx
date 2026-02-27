@@ -23,12 +23,10 @@ export function Navigation() {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                <Leaf className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold text-foreground">
-                Chowvest
-              </span>
+              <div className="w-13 h-13 flex items-center justify-center">
+              <img src="/Chowvest-logo.png" alt="Chowvest logo" className="w-13 h-13 object-contain" />
+            </div>
+            <span className="text-xl font-bold text-foreground">Chowvest</span>
             </Link>
 
             <div className="flex items-center gap-1">

@@ -18,12 +18,12 @@ export default function LandingPage() {
       <LandingNav />
 
       {/* Promo Banner */}
-      <div className="bg-gradient-to-r from-primary to-primary/90 text-white text-center py-3 px-4">
+      {/* <div className="bg-gradient-to-r from-primary to-primary/90 text-white text-center py-3 px-4">
         <p className="text-sm md:text-base">
           <span className="font-bold">🎁 Launch Special:</span> First 100
           members get ₦500 FREE + Zero fees for 3 months! Only 67 spots left
         </p>
-      </div>
+      </div>*/}
 
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-green-50 to-emerald-100 py-16 md:py-24">
@@ -31,11 +31,11 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-balance leading-tight">
-                Beat Food Inflation.{" "}
-                <span className="text-primary">Save Small, Eat Well.</span>
+                Save Small, Eat Well.{" "}
+                <span className="text-primary">Beat Food Inflation.</span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-                With AgroFund, you can start with as little as ₦500, save
+                With Chowvest, you can start with as little as ₦500, save
                 towards your food, and get your kitchen stocked when you need
                 it. No stress, no surprises from rising food prices.
               </p>
@@ -104,7 +104,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12 space-y-4">
             <h2 className="text-3xl md:text-4xl font-bold text-balance">
-              How AgroFund Works
+              How Chowvest Works
             </h2>
             <p className="text-lg text-muted-foreground">
               Three simple steps to start saving and beating food inflation
@@ -117,7 +117,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-semibold mb-3">Deposit Any Amount</h3>
               <p className="text-muted-foreground">
-                Deposit any amount into your AgroFund food wallet. You can even
+                Deposit any amount into your Chowvest food wallet. You can even
                 set up auto-deductions. Start with as little as ₦500.
               </p>
             </div>
@@ -172,7 +172,7 @@ export default function LandingPage() {
               <div className="p-6 space-y-4">
                 <h3 className="text-2xl font-bold">Rice</h3>
                 <p className="text-muted-foreground">
-                  Start small, build up. With AgroFund, you'll always have rice
+                  Start small, build up. With Chowvest, you'll always have rice
                   ready for your family.
                 </p>
                 <div className="border-t pt-4">
@@ -180,7 +180,7 @@ export default function LandingPage() {
                     Starting from
                   </div>
                   <div className="text-2xl font-bold text-primary">
-                    ₦500/week
+                    ₦500
                   </div>
                 </div>
                 <Button asChild className="w-full">
@@ -209,7 +209,7 @@ export default function LandingPage() {
                     Starting from
                   </div>
                   <div className="text-2xl font-bold text-primary">
-                    ₦500/week
+                    ₦500
                   </div>
                 </div>
                 <Button asChild className="w-full">
@@ -238,7 +238,7 @@ export default function LandingPage() {
                     Starting from
                   </div>
                   <div className="text-2xl font-bold text-primary">
-                    ₦500/week
+                    ₦500
                   </div>
                 </div>
                 <Button asChild className="w-full">
@@ -266,8 +266,7 @@ export default function LandingPage() {
               <Lock className="w-12 h-12 text-primary mx-auto" />
               <h3 className="text-xl font-semibold">Price Lock Protection</h3>
               <p className="text-muted-foreground">
-                Lock today's prices and protect yourself from future inflation.
-                Your price stays the same no matter what happens.
+                Save gradually and secure today's price for up to 90 days. If food prices rise, you're covered. If prices drop, you still get the new lower price. No pressure. No bulk buying. Just smart planning.
               </p>
             </div>
             <div className="bg-muted/50 rounded-xl p-6 text-center space-y-3">
@@ -280,7 +279,7 @@ export default function LandingPage() {
             </div>
             <div className="bg-muted/50 rounded-xl p-6 text-center space-y-3">
               <Truck className="w-12 h-12 text-primary mx-auto" />
-              <h3 className="text-xl font-semibold">Free Delivery</h3>
+              <h3 className="text-xl font-semibold">Fast Delivery</h3>
               <p className="text-muted-foreground">
                 When you complete your savings goal, we deliver your foodstuff
                 straight to your doorstep.
@@ -321,7 +320,7 @@ export default function LandingPage() {
             Ready to Get Started?
           </h2>
           <p className="text-lg md:text-xl opacity-90">
-            Join 47 smart Nigerians already beating food inflation with AgroFund
+            Join 47 smart Nigerians already beating food inflation with Chowvest
           </p>
           <Button asChild size="lg" variant="secondary" className="text-base">
             <Link href="/dashboard">
@@ -335,8 +334,9 @@ export default function LandingPage() {
       <footer className="bg-gray-900 text-white py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold">🌾 Chowvest</h3>
+            <div className="space-y-4 ">
+              <img src="/Chowvest-logo.png" alt="Chowvest logo" className="w-15 h-15 object-contain" />
+              <h3 className="text-xl font-bold"> Chowvest</h3>
               <p className="text-gray-400 leading-relaxed">
                 Save small, eat well. Beat food inflation with smart savings for
                 your household food needs.
@@ -407,7 +407,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 AgroFund. All rights reserved.</p>
+            <p>&copy; 2025 Chowvest. All rights reserved.</p>
           </div>
         </div>
       </footer>

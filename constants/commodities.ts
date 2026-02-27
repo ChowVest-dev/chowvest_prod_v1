@@ -271,40 +271,6 @@ export const COMMODITIES = [
   // BEANS
   // =====================
   {
-    sku: "BEA-HNY-OLO-B1",
-    category: "Beans",
-    brand: null,
-    price: 100000,
-    unit: "kg",
-    size: 50,
-    name: "Honey beans",
-    image: null,
-    description: "Honey beans (Oloyin - 1 bag)",
-  },
-  {
-    sku: "BEA-HNY-OLO-B0.5",
-    category: "Beans",
-    brand: null,
-    price: 50000,
-    unit: "kg",
-    size: 25,
-    name: "Honey beans",
-    image: null,
-    description: "Honey beans (Oloyin - half bag)",
-  },
-  {
-    sku: "BEA-HNY-OLO-B0.25",
-    category: "Beans",
-    brand: null,
-    price: 25000,
-    unit: "kg",
-    size: 12.5,
-    name: "Honey beans",
-    image: null,
-    description: "Honey beans (Oloyin - quarter bag)",
-  },
-
-  {
     sku: "BEA-DRM-OLO-B1",
     category: "Beans",
     brand: null,
