@@ -102,7 +102,7 @@ export default function BasketGoalsClientWrapper({
   };
 
   return (
-    <div className="container mx-auto px-4 md:px-6 space-y-6 pt-20 pb-24 md:pb-8">
+    <div className="container mx-auto px-4 md:px-6 space-y-6 pt-20 pb-24 md:pb-8 mt-6">
       <GoalsHeader
         completedGoalsCount={completedBaskets.length}
         onViewDeliveries={() => setShowDeliveriesDialog(true)}

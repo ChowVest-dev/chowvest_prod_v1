@@ -6,9 +6,9 @@ export function AuthContainer({ children }: { children: ReactNode }) {
       {/* Left side - Hero section */}
       <div className="hidden md:flex md:w-[55%] bg-gradient-to-br from-primary via-primary to-primary-foreground flex-col justify-between p-12">
         <div>
-          <div className="flex items-center gap-3 mb-16">
-            <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center font-bold text-primary text-xl">
-              CV
+           <div className="flex items-center gap-3 mb-16">
+            <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center">
+              <img src="/Chowvest-logo.png" alt="Chowvest logo" className="w-12 h-12 object-contain" />
             </div>
             <span className="text-2xl font-bold text-primary-foreground">
               Chowvest
