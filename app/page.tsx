@@ -31,7 +31,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-balance leading-tight">
-                Save Small, Eat Well.{" "}
+                Small Savings, Big meals {" "}
                 <span className="text-primary">Beat Food Inflation.</span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">

@@ -215,6 +215,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
   return (
     <>
       <Card
+        data-onboarding-id="create-target-button"
         className="p-6 sticky top-24 cursor-pointer hover:shadow-lg transition-shadow"
         onClick={() => setIsOpen(true)}
       >
