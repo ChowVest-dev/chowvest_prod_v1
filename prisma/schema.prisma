@@ -38,6 +38,9 @@ model User {
   suspendedAt      DateTime?
   suspensionReason String?
   
+  // Onboarding
+  hasCompletedOnboarding Boolean @default(false)
+  
   // Terms acceptance
   acceptedTermsAt     DateTime?
   acceptedTermsVersion String?

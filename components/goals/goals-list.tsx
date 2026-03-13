@@ -155,7 +155,7 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
   return (
     <>
       <div className="space-y-4">
-        {activeBaskets.map((goal) => {
+        {activeBaskets.map((goal, i) => {
           const progress = (goal.currentAmount / goal.goalAmount) * 100;
           const remaining = goal.goalAmount - goal.currentAmount;
 
@@ -174,6 +174,7 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
           return (
             <Card
               key={goal.id}
+              data-onboarding-id={i === 0 ? "goal-progress-bar" : undefined}
               className={`p-6 hover:shadow-lg transition-shadow ${
                 progress >= 100 ? "border-green-500 border-2" : ""
               }`}

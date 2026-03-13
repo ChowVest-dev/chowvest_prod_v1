@@ -13,6 +13,7 @@ interface SessionUser {
   profileImage: string | null;
   location: string | null;
   createdAt: string;
+  hasCompletedOnboarding: boolean;
 }
 
 interface SessionResult {
@@ -41,6 +42,7 @@ export async function getSession(): Promise<SessionResult | null> {
             profileImage: true,
             location: true,
             createdAt: true,
+            hasCompletedOnboarding: true,
           },
         });
         if (user) {
@@ -71,6 +73,7 @@ export async function getSession(): Promise<SessionResult | null> {
               profileImage: true,
               location: true,
               createdAt: true,
+              hasCompletedOnboarding: true,
             },
           },
         },

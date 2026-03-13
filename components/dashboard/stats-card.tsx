@@ -44,6 +44,9 @@ export function StatsCards({
           <Card
             key={stat.label}
             className="p-6 bg-gradient-to-br from-card to-accent/20 border-border/50"
+            {...(stat.label === "Wallet Balance"
+              ? { "data-onboarding-id": "wallet-balance" }
+              : {})}
           >
             <div className="flex items-start justify-between">
               <div className="space-y-2">

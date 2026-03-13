@@ -11,6 +11,7 @@ interface SessionUser {
   profileImage: string | null;
   location: string | null;
   createdAt: string;
+  hasCompletedOnboarding: boolean;
 }
 
 interface SessionContextType {

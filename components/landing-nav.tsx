@@ -14,7 +14,7 @@ export function LandingNav() {
         <div className="flex items-center justify-between py-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-           <div className="w-13 h-13 flex items-center justify-center">
+            <div className="w-13 h-13 flex items-center justify-center">
               <img src="/Chowvest-logo.png" alt="Chowvest logo" className="w-13 h-13 object-contain" />
             </div>
             <span className="text-xl font-bold text-foreground">Chowvest</span>
