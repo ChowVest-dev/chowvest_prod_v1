@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Wallet, Target, ShoppingBag, User, Leaf } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { InteractiveMenu } from "@/components/ui/modern-mobile-menu";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
@@ -55,27 +56,7 @@ export function Navigation() {
       </nav>
 
       {/* Mobile Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-lg border-t border-border">
-        <div className="flex items-center justify-around px-4 py-3">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors",
-                  isActive ? "text-primary" : "text-muted-foreground"
-                )}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="text-xs font-medium">{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
+      <InteractiveMenu items={navItems} accentColor="var(--primary)" />
     </>
   );
 }
