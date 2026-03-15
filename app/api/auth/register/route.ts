@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import {
-  hashPassword,
-  generateAccessToken,
-  generateRefreshToken,
-  hashRefreshToken,
-  getRefreshTokenExpiry,
-  setAuthCookies,
-} from "@/lib/auth";
+import { hashPassword } from "@/lib/auth";
+import { sendVerificationEmail } from "@/lib/email";
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -53,43 +50,33 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    console.log("✅ User registered:", newUser);
+    //console.log("✅ User registered:", newUser);
 
-    // Create session
-    const refreshToken = generateRefreshToken();
-    const hashedRefreshToken = await hashRefreshToken(refreshToken);
+    // Generate 6 digit OTP and save to VerificationToken
+    const otp = generateOTP();
+    const expiry = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes from now
 
-    // Get request metadata for security tracking
-    const ipAddress =
-      req.headers.get("x-forwarded-for") ||
-      req.headers.get("x-real-ip") ||
-      "unknown";
-    const userAgent = req.headers.get("user-agent") || undefined;
-
-    await prisma.session.create({
+    await prisma.verificationToken.create({
       data: {
-        sessionToken: hashedRefreshToken,
-        userId: newUser.id,
-        expires: getRefreshTokenExpiry(),
-        ipAddress,
-        userAgent,
+        identifier: email.toLowerCase(),
+        token: otp,
+        type: "email_verification",
+        expires: expiry,
+        attempts: 0,
       },
     });
 
-    // Generate access token
-    const accessToken = await generateAccessToken(newUser.id);
+    // Send the Verification Email using Resend
+    await sendVerificationEmail(email.toLowerCase(), otp);
 
-    // Create response with cookies
     const response = NextResponse.json(
       {
         success: true,
-        message: "Registration successful",
-        user: newUser,
+        message: "Registration successful. Please verify your email.",
+        requireVerification: true,
       },
       { status: 201 }
     );
-
-    setAuthCookies(response, accessToken, refreshToken);
 
     return response;
   } catch (error) {

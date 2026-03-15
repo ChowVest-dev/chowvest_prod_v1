@@ -5,28 +5,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import axios from "axios";
 import { FullPageLoader } from "@/components/loaders/full-page-loader";
 
-import { useSession } from "@/components/providers/session-provider";
-
 interface SignUpProps {
   onToggle: () => void;
+  onVerify: (email: string) => void;
 }
 
-export function SignUp({ onToggle }: SignUpProps) {
+export function SignUp({ onToggle, onVerify }: SignUpProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
-  const { refetch } = useSession();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,14 +44,8 @@ export function SignUp({ onToggle }: SignUpProps) {
 
       const data = response.data;
 
-      toast.success("Account created successfully!");
-      toast.success("Welcome to Chowvest!");
-      setIsAuthenticating(true);
-
-      await refetch(); // Update session state immediately
-
-      router.push("/dashboard");
-      router.refresh();
+      toast.success("Account created! Please check your email for a verification code.");
+      onVerify(email);
     } catch (error: any) {
       console.error(error);
       const errorMessage =
@@ -70,10 +59,6 @@ export function SignUp({ onToggle }: SignUpProps) {
 
   return (
     <>
-      <FullPageLoader
-        show={isAuthenticating}
-        message="Creating your account..."
-      />
 
       <div className="w-full max-w-md">
         <div className="space-y-2 text-center md:text-left mb-2">
