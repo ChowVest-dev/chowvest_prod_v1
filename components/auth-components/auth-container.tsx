@@ -19,7 +19,7 @@ export function AuthContainer({ children }: { children: ReactNode }) {
         <div className="space-y-8">
           <div>
             <h1 className="text-5xl font-bold text-primary-foreground mb-6 text-balance">
-              Save Smart, Eat Better
+              Small Savings, Big meals
             </h1>
             <p className="text-lg text-primary-foreground/80">
               Build a simple and reliable food savings plan. Restock your
