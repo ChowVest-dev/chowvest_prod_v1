@@ -69,10 +69,9 @@ export function WalletPageClient({ wallet, baskets }: WalletPageClientProps) {
         toast.success("Payment verified successfully!", {
           id: loadingToast,
         });
-        // Refresh the page to get updated wallet data from server
+        // Remove search params from URL first, then refresh to get updated wallet data
+        await router.push("/wallet", { scroll: false });
         router.refresh();
-        // Remove search params from URL
-        router.push("/wallet", { scroll: false });
       } else {
         toast.error(response.data.error || "Verification failed", {
           id: loadingToast,

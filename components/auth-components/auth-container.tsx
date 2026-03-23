@@ -19,7 +19,7 @@ export function AuthContainer({ children }: { children: ReactNode }) {
         <div className="space-y-8">
           <div>
             <h1 className="text-5xl font-bold text-primary-foreground mb-6 text-balance">
-              Small Savings, Big meals
+              Small Savings, Big Meals
             </h1>
             <p className="text-lg text-primary-foreground/80">
               Build a simple and reliable food savings plan. Restock your
@@ -29,7 +29,7 @@ export function AuthContainer({ children }: { children: ReactNode }) {
 
           <div className="space-y-6 pt-8">
             <div className="flex gap-4">
-              <div className="w-14 h-14 bg-accent/20 rounded-full flex items-center justify-center shrink-0">
+              <div className="w-14 h-14 bg-accent/20 rounded-full flex it ems-center justify-center shrink-0">
                 <span className="text-accent text-2xl">🍽️</span>
               </div>
               <div>
