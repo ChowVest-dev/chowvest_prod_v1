@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Chowvest - Save Small, Eat Well",
+  title: "Chowvest - Small Savings, Big meals",
   description: "Secure your food future with smart savings.",
 };
 
