@@ -580,3 +580,21 @@ model SecurityEvent {
   @@index([createdAt])
   @@map("security_events")
 }
+
+// ============================================
+// PROCESSED WEBHOOKS (Idempotency)
+// ============================================
+
+model ProcessedWebhook {
+  id        String   @id @default(cuid())
+  eventId   String   @unique // Paystack event ID - unique constraint prevents duplicates
+  eventType String   // "charge.success", "refund.processed", etc.
+  reference String?  // Payment reference for cross-referencing
+  payload   Json?    // Store the event payload for debugging
+
+  processedAt DateTime @default(now())
+
+  @@index([reference])
+  @@index([processedAt])
+  @@map("processed_webhooks")
+}

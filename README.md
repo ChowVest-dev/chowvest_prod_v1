@@ -83,19 +83,27 @@ NEXT_PUBLIC_APP_URL="http://localhost:3000"
 # Auth
 JWT_SECRET="your-secret"
 
-# Payments
+# Payments - Use Test keys for development, Live keys for production
 PAYSTACK_SECRET_KEY="sk_test_..."
-NEXT_PUBLIC_PAYSTACK_SECRET_KEY="pk_test_..."
+# Note: NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY is optional if payments are fully server-side initialized
 ```
 
-### 3. Database Initialization
+### 3. Paystack Webhook Configuration
+To ensure deposits are automatically verified:
+1. Go to your **Paystack Dashboard** -> **Settings** -> **API Keys & Webhooks**.
+2. Set your **Webhook URL**:
+   - For **Test Mode** (local dev): Use a service like ngrok to expose your local server, then set the url to `https://<your-ngrok-url>/api/wallet/webhook`.
+   - For **Live Mode** (production): Set to `https://<your-production-domain>/api/wallet/webhook`.
+3. If you want to switch from Test to Live mode, simply update the `PAYSTACK_SECRET_KEY` in your `.env` file to your `sk_live_...` key and ensure your Live Webhook URL is set. No code changes are required!
+
+### 4. Database Initialization
 
 ```bash
 npx prisma generate
 npx prisma db push
 ```
 
-### 4. Start Development
+### 5. Start Development
 
 ```bash
 pnpm dev

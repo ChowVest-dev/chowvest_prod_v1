@@ -40,10 +40,36 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
+    const eventId = event.data?.id?.toString();
     const { reference, amount: amountKobo, fees } = event.data;
 
     if (!reference) {
       return NextResponse.json({ error: "No reference" }, { status: 400 });
+    }
+
+    // ── Idempotency Guard ──
+    // Use a DB unique constraint on eventId to prevent duplicate processing.
+    // If two identical webhooks arrive simultaneously, only one will succeed
+    // at inserting into ProcessedWebhook; the other will hit the unique
+    // constraint and be safely rejected.
+    if (eventId) {
+      try {
+        await prisma.processedWebhook.create({
+          data: {
+            eventId,
+            eventType: event.event,
+            reference,
+            payload: event.data,
+          },
+        });
+      } catch (error: any) {
+        // P2002 = Unique constraint violation → already processed
+        if (error?.code === "P2002") {
+          console.log(`Paystack webhook: duplicate event ${eventId}, skipping`);
+          return NextResponse.json({ received: true, message: "Already processed" });
+        }
+        throw error;
+      }
     }
 
     // Find the corresponding pending transaction
@@ -59,7 +85,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    // Skip if already processed (idempotency)
+    // Secondary check: skip if already completed (belt-and-suspenders)
     if (transaction.status === "COMPLETED") {
       return NextResponse.json({ received: true, message: "Already processed" });
     }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -112,6 +113,15 @@ export function SignIn({ onToggle }: SignInProps) {
                 <Eye className="w-5 h-5" />
               )}
             </button>
+          </div>
+
+          <div className="flex justify-end">
+            <Link
+              href="/auth/forgot-password"
+              className="text-sm text-primary hover:underline font-medium"
+            >
+              Forgot password?
+            </Link>
           </div>
 
           <Button
