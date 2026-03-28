@@ -127,10 +127,12 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
   };
 
   const handleDateSelect = () => {
-    if (!goalData.targetDate) {
-      toast.error("Please select a target date");
-      return;
-    }
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + 90);
+    setGoalData({
+      ...goalData,
+      targetDate: targetDate.toISOString().split("T")[0],
+    });
     setCurrentStep("review");
   };
 
@@ -417,33 +419,15 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Size
                 </Button>
-                <div className="max-w-md mx-auto space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="targetDate">Target Date</Label>
-                    <div className="relative">
-                      <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="targetDate"
-                        type="date"
-                        value={goalData.targetDate}
-                        onChange={(e) =>
-                          setGoalData({
-                            ...goalData,
-                            targetDate: e.target.value,
-                          })
-                        }
-                        min={new Date().toISOString().split("T")[0]}
-                        className="pl-10"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Choose when you want to reach your savings goal
+                <div className="max-w-md mx-auto space-y-6">
+                  <div className="p-6 bg-primary/10 rounded-xl border border-primary/20">
+                    <p className="text-center text-foreground font-medium leading-relaxed text-[15px]">
+                      Start a plan and lock in today's food price for up to 90 days. If prices go up, you pay less. If they go down, you enjoy the lower price.
                     </p>
                   </div>
                   <Button
                     className="w-full"
                     onClick={handleDateSelect}
-                    disabled={!goalData.targetDate}
                   >
                     Continue to Review
                     <ArrowRight className="w-4 h-4 ml-2" />
