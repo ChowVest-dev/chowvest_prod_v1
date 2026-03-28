@@ -35,8 +35,8 @@ export async function POST(req: NextRequest) {
 
     const event = JSON.parse(rawBody);
 
-    // We only care about successful charges
-    if (event.event !== "charge.success") {
+    // We care about successful and failed charges
+    if (event.event !== "charge.success" && event.event !== "charge.failed") {
       return NextResponse.json({ received: true });
     }
 
@@ -85,9 +85,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    // Secondary check: skip if already completed (belt-and-suspenders)
-    if (transaction.status === "COMPLETED") {
-      return NextResponse.json({ received: true, message: "Already processed" });
+    // Secondary check: skip if already processed (belt-and-suspenders)
+    if (transaction.status !== "PENDING" && transaction.status !== "PROCESSING") {
+      return NextResponse.json({ received: true, message: `Already processed (${transaction.status})` });
+    }
+
+    // Handle failed payments immediately
+    if (event.event === "charge.failed") {
+      const gatewayResponse = event.data?.gateway_response || "Payment failed at Paystack";
+      
+      await prisma.transaction.update({
+        where: { id: transaction.id },
+        data: {
+          status: "FAILED",
+          failureReason: gatewayResponse,
+          updatedAt: new Date(),
+        },
+      });
+
+      await logFinancialAction(
+        transaction.userId,
+        "deposit_failed",
+        `Deposit of ₦${transaction.amount.toString()} failed via Paystack webhook`,
+        {
+          amount: transaction.amount.toString(),
+          reference,
+          reason: gatewayResponse,
+          source: "webhook",
+        }
+      );
+
+      console.log(`Paystack webhook: marked ref ${reference} as FAILED`);
+      return NextResponse.json({ received: true });
     }
 
     const amount = koboToNaira(amountKobo);
