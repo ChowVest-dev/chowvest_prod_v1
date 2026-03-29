@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import axios from "axios";
@@ -21,6 +21,7 @@ interface Basket {
   name: string;
   goalAmount: number;
   currentAmount: number;
+  status: string;
 }
 
 interface QuickTransferProps {
@@ -33,12 +34,25 @@ export function QuickTransfer({ baskets, balance }: QuickTransferProps) {
   const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const activeBaskets = baskets.filter((b) => b.status === "ACTIVE");
+
+  // Auto-select basket if there's only one
+  useEffect(() => {
+    if (activeBaskets.length === 1) {
+      setSelectedBasket(activeBaskets[0].id);
+    }
+  }, [activeBaskets.length]);
 
   const quickAmounts = [5000, 10000, 20000];
 
   const handleTransfer = async () => {
-    if (!selectedBasket || !amount || parseFloat(amount) <= 0) {
-      toast.error("Please select a basket and enter a valid amount");
+    if (
+      !selectedBasket ||
+      selectedBasket === "none" ||
+      !amount ||
+      parseFloat(amount) <= 0
+    ) {
+      toast.error("Please select a basket and enter an amount");
       return;
     }
 
@@ -56,7 +70,11 @@ export function QuickTransfer({ baskets, balance }: QuickTransferProps) {
       });
 
       if (res.data.success) {
-        toast.success("Transfer successful!");
+        const basketName =
+          activeBaskets.find((b) => b.id === selectedBasket)?.name || "goal";
+        toast.success(
+          `₦${parseFloat(amount).toLocaleString()} transferred to ${basketName} successfully!`
+        );
         setAmount("");
         setSelectedBasket("");
         // Refresh the page to show updated data
@@ -84,12 +102,12 @@ export function QuickTransfer({ baskets, balance }: QuickTransferProps) {
               <SelectValue placeholder="Select a basket" />
             </SelectTrigger>
             <SelectContent>
-              {baskets.length === 0 ? (
+              {activeBaskets.length === 0 ? (
                 <SelectItem value="none" disabled>
-                  No baskets available
+                  No active goals available
                 </SelectItem>
               ) : (
-                baskets.map((basket) => (
+                activeBaskets.map((basket) => (
                   <SelectItem key={basket.id} value={basket.id}>
                     {basket.name}
                   </SelectItem>
@@ -135,9 +153,7 @@ export function QuickTransfer({ baskets, balance }: QuickTransferProps) {
         <Button
           className="w-full mt-4"
           onClick={handleTransfer}
-          disabled={
-            isLoading || !selectedBasket || !amount || baskets.length === 0
-          }
+          disabled={isLoading || activeBaskets.length === 0}
         >
           {isLoading ? "Processing..." : "Transfer Now"}
         </Button>

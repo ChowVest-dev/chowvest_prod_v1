@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       prisma.wallet.findUnique({
         where: { userId: session.user.id },
       }),
-      prisma.basket.findUnique({
+      prisma.basket.findFirst({
         where: { id: basketId, userId: session.user.id },
       }),
     ]);

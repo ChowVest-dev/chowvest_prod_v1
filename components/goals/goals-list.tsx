@@ -51,14 +51,42 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
   const [selectedBasket, setSelectedBasket] = useState<string | null>(null);
   const [addFundsOpen, setAddFundsOpen] = useState(false);
   const [goalToDelete, setGoalToDelete] = useState<string | null>(null);
+  const [goalToCancel, setGoalToCancel] = useState<Basket | null>(null);
   const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const activeBaskets = baskets.filter((b: any) => b.status === "ACTIVE");
+  const visibleBaskets = baskets.filter(
+    (b: any) => b.status === "ACTIVE" || b.status === "CANCELLED"
+  );
 
   const handleAddFunds = (basketId: string) => {
     setSelectedBasket(basketId);
     setAddFundsOpen(true);
+  };
+
+  const handleCancelGoal = async () => {
+    if (!goalToCancel) return;
+
+    try {
+      setIsLoading(true);
+      await axios.post(`/api/baskets/${goalToCancel.id}/cancel`);
+      toast.success(
+        goalToCancel.currentAmount > 0
+          ? `Goal cancelled and ₦${goalToCancel.currentAmount.toLocaleString()} refunded to wallet`
+          : "Goal cancelled successfully"
+      );
+
+      if (onUpdate) {
+        onUpdate();
+      }
+      setGoalToCancel(null);
+    } catch (error: any) {
+      console.error(error);
+      const msg = error.response?.data?.error || "Failed to cancel goal";
+      toast.error(msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleDeleteGoal = async () => {
@@ -67,7 +95,7 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
     try {
       setIsLoading(true);
       await axios.delete(`/api/baskets/${goalToDelete}`);
-      toast.success("Goal deleted successfully");
+      toast.success("Goal deleted permanently");
 
       if (onUpdate) {
         onUpdate();
@@ -138,7 +166,7 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
     }
   };
 
-  if (activeBaskets.length === 0) {
+  if (visibleBaskets.length === 0) {
     return (
       <Card className="p-12 text-center">
         <div className="w-16 h-16 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
@@ -155,7 +183,8 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
   return (
     <>
       <div className="space-y-4">
-        {activeBaskets.map((goal, i) => {
+        {visibleBaskets.map((goal, i) => {
+          const isCancelled = goal.status === "CANCELLED";
           const progress = (goal.currentAmount / goal.goalAmount) * 100;
           const remaining = goal.goalAmount - goal.currentAmount;
 
@@ -176,8 +205,8 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
               key={goal.id}
               data-onboarding-id={i === 0 ? "goal-progress-bar" : undefined}
               className={`p-6 hover:shadow-lg transition-shadow ${
-                progress >= 100 ? "border-green-500 border-2" : ""
-              }`}
+                progress >= 100 && !isCancelled ? "border-green-500 border-2" : ""
+              } ${isCancelled ? "opacity-75 grayscale-[0.5] border-dashed" : ""}`}
             >
               <div className="flex flex-col md:flex-row gap-6">
                 <div className="relative">
@@ -215,17 +244,25 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
                         <Badge variant="secondary" className="text-xs">
                           {displayCategory}
                         </Badge>
-                        {progress >= 100 && (
+                        {progress >= 100 && !isCancelled && (
                           <Badge className="text-xs bg-green-500 hover:bg-green-600">
                             Goal Reached!
                           </Badge>
                         )}
+                        {isCancelled && (
+                          <Badge variant="destructive" className="text-xs">
+                            Cancelled
+                          </Badge>
+                        )}
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Target by{" "}
-                        {goal.targetDate
-                          ? format(new Date(goal.targetDate), "MMM d, yyyy")
-                          : "No deadline"}
+                        {isCancelled
+                          ? "Goal was cancelled"
+                          : `Target by ${
+                              goal.targetDate
+                                ? format(new Date(goal.targetDate), "MMM d, yyyy")
+                                : "No deadline"
+                            }`}
                       </p>
                     </div>
                     <DropdownMenu>
@@ -239,12 +276,21 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
-                          onClick={() => setGoalToDelete(goal.id)}
-                        >
-                          Delete Goal
-                        </DropdownMenuItem>
+                        {isCancelled ? (
+                          <DropdownMenuItem
+                            className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+                            onClick={() => setGoalToDelete(goal.id)}
+                          >
+                            Delete Goal Permanentlly
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem
+                            className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+                            onClick={() => setGoalToCancel(goal)}
+                          >
+                            Cancel Goal
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -276,7 +322,7 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
                         ₦{goal.regularTopUp?.toLocaleString() || "0"}
                       </p>
                     </div>
-                    {progress >= 100 ? (
+                    {progress >= 100 && !isCancelled ? (
                       <Button
                         size="sm"
                         className="gap-2 bg-green-600 hover:bg-green-700"
@@ -289,6 +335,7 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
                         size="sm"
                         className="gap-2"
                         onClick={() => handleAddFunds(goal.id)}
+                        disabled={isCancelled}
                       >
                         <Plus className="w-4 h-4" />
                         Add Funds
@@ -309,11 +356,10 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Goal</DialogTitle>
+            <DialogTitle>Delete Goal Permanently</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this goal? This action cannot be
-              undone.
-              {/* Note: In our API, we only allow deleting if funds are 0, so no fear of losing money here, but good to be explicit */}
+              Are you sure you want to permanently delete this goal? This will
+              remove it from your history entirely.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 mt-4">
@@ -329,7 +375,58 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
               onClick={handleDeleteGoal}
               disabled={isLoading}
             >
-              {isLoading ? "Deleting..." : "Delete Goal"}
+              {isLoading ? "Deleting..." : "Delete Permanently"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Confirmation Dialog */}
+      <Dialog
+        open={!!goalToCancel}
+        onOpenChange={(open) => !open && setGoalToCancel(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel Savings Goal?</DialogTitle>
+            <DialogDescription className="space-y-3">
+              <p>
+                Are you sure you want to cancel your <span className="font-bold">{goalToCancel?.name}</span>
+                goal?
+              </p>
+              {goalToCancel && goalToCancel.currentAmount > 0 && (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
+                  <p className="font-bold flex items-center gap-2 mb-1">
+                    <span className="text-lg">⚠️</span> Refund Warning
+                  </p>
+                  <p>
+                    Your saved funds of <span className="font-bold">₦
+                    {goalToCancel.currentAmount.toLocaleString()}</span> will be
+                    returned back to your primary wallet immediately. However,
+                    you will lose your progress towards this food basket.
+                  </p>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-2">
+                This goal will be moved to a cancelled state. You can
+                permanently delete it later if you wish.
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setGoalToCancel(null)}
+              disabled={isLoading}
+            >
+              Go Back
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancelGoal}
+              disabled={isLoading}
+            >
+              {isLoading ? "Cancelling..." : "Confirm Cancellation"}
             </Button>
           </div>
         </DialogContent>
