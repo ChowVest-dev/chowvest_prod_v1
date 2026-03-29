@@ -39,6 +39,7 @@ export default async function WalletPage() {
       name: true,
       goalAmount: true,
       currentAmount: true,
+      status: true,
     },
   });
 
@@ -63,6 +64,7 @@ export default async function WalletPage() {
     name: b.name,
     goalAmount: Number(b.goalAmount),
     currentAmount: Number(b.currentAmount),
+    status: b.status,
   }));
 
   return (

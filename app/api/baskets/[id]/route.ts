@@ -27,43 +27,31 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    // specific logic: if basket has funds, we might want to prevent deletion or refund.
-    // For now, we'll allow deletion only if funds are zero, OR we just mark it as CANCELLED (Soft delete).
-    // Soft delete is safer.
-
-    if (Number(basket.currentAmount) > 0) {
-      // If there are funds, we shouldn't just delete/cancel without handling them.
-      // For this task, I'll return an error to be safe.
-      // Or if the user really wants to delete, they should withdraw first?
-      // Let's allow cancelling but warn? No, UI just says "Delete".
-      // Let's try to be smart. If funds > 0, we can't delete.
-
+    // Only allow deletion if the basket is already CANCELLED
+    if (basket.status !== "CANCELLED") {
       return NextResponse.json(
         {
           error:
-            "Cannot delete a goal with funds. Please withdraw/transfer funds first.",
+            "Active goals cannot be deleted directly. Please cancel the goal first to refund your funds.",
         },
         { status: 400 }
       );
     }
 
-    // Soft delete by setting status to CANCELLED
-    // Check if CANCELLED is a valid status in schema. Yup, "enum BasketStatus { ACTIVE COMPLETED PAUSED CANCELLED }"
-
-    const updatedBasket = await prisma.basket.update({
+    // Perform permanent deletion
+    await prisma.basket.delete({
       where: { id },
-      data: { status: "CANCELLED", cancelledAt: new Date() },
     });
 
     await logAction({
       userId: session.user.id,
-      action: "basket_cancelled",
+      action: "basket_deleted",
       category: "financial",
-      description: `Cancelled basket: ${basket.name}`,
+      description: `Permanently deleted basket: ${basket.name}`,
       metadata: { basketId: id },
     });
 
-    return NextResponse.json({ success: true, basket: updatedBasket });
+    return NextResponse.json({ success: true, message: "Goal deleted permanently" });
   } catch (error) {
     console.error("Delete basket error:", error);
     return NextResponse.json(

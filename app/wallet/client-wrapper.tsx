@@ -33,6 +33,7 @@ interface Basket {
   name: string;
   goalAmount: number;
   currentAmount: number;
+  status: string;
 }
 
 interface WalletPageClientProps {
