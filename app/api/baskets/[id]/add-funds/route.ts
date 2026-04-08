@@ -22,8 +22,8 @@ export async function POST(
     const body = await req.json();
     const { amount } = body;
 
-    if (!amount || amount <= 0) {
-      return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+    if (!amount || amount < 500) {
+      return NextResponse.json({ error: "Minimum deposit amount is ₦500" }, { status: 400 });
     }
 
     // Get wallet and basket
@@ -56,6 +56,14 @@ export async function POST(
 
     // Convert amount to Decimal for comparison
     const amountDecimal = new Prisma.Decimal(amount);
+    const remainingAmount = basket.goalAmount.minus(basket.currentAmount);
+
+    if (amountDecimal.greaterThan(remainingAmount)) {
+      return NextResponse.json(
+        { error: `Maximum allowed for this goal is ₦${remainingAmount.toNumber().toLocaleString()}` },
+        { status: 400 }
+      );
+    }
 
     if (wallet.balance.lessThan(amountDecimal)) {
       return NextResponse.json(

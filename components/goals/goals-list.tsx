@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Plus, MoreVertical } from "lucide-react";
+import { Plus, MoreVertical, AlertCircle, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useState } from "react";
@@ -26,6 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
+import { DepositModal } from "@/components/wallet/deposit-modal";
 
 interface Basket {
   id: string;
@@ -54,13 +55,29 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
   const [goalToCancel, setGoalToCancel] = useState<Basket | null>(null);
   const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [insufficientBalance, setInsufficientBalance] = useState(false);
+  const [tab, setTab] = useState<"NEW" | "COMPLETED" | "CANCELLED">("NEW");
 
   const visibleBaskets = baskets.filter(
-    (b: any) => b.status === "ACTIVE" || b.status === "CANCELLED"
+    (b: any) => {
+      const isNotDelivered = !b.deliveries || b.deliveries.filter((d: any) => d.status !== "CANCELLED").length === 0;
+      if (tab === "NEW") {
+        return b.status === "ACTIVE" && isNotDelivered;
+      }
+      if (tab === "COMPLETED") {
+        return b.status === "COMPLETED" && isNotDelivered;
+      }
+      if (tab === "CANCELLED") {
+        return b.status === "CANCELLED";
+      }
+      return false;
+    }
   );
 
   const handleAddFunds = (basketId: string) => {
     setSelectedBasket(basketId);
+    setInsufficientBalance(false);
     setAddFundsOpen(true);
   };
 
@@ -70,9 +87,12 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
     try {
       setIsLoading(true);
       await axios.post(`/api/baskets/${goalToCancel.id}/cancel`);
+      
+      const refundAmt = goalToCancel.currentAmount - (goalToCancel.currentAmount * 0.05);
+
       toast.success(
         goalToCancel.currentAmount > 0
-          ? `Goal cancelled and ₦${goalToCancel.currentAmount.toLocaleString()} refunded to wallet`
+          ? `Goal cancelled and ₦${refundAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} refunded to wallet`
           : "Goal cancelled successfully"
       );
 
@@ -131,16 +151,27 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
   };
 
   const confirmAddFunds = async () => {
-    if (!selectedBasket || !amount || parseFloat(amount) <= 0) {
-      toast.error("Please enter a valid amount");
+    if (!selectedBasket || !amount || parseFloat(amount) < 500) {
+      toast.error("Minimum deposit amount is ₦500");
       return;
+    }
+
+    const activeBasket = baskets.find(b => b.id === selectedBasket);
+    if (activeBasket) {
+      const remainingAmount = activeBasket.goalAmount - activeBasket.currentAmount;
+      if (parseFloat(amount) > remainingAmount) {
+        toast.error(`Maximum allowed for this goal is ₦${remainingAmount.toLocaleString()}`);
+        return;
+      }
     }
 
     const availableBalance = balance || 0;
     if (parseFloat(amount) > availableBalance) {
-      toast.error("Insufficient balance");
+      setInsufficientBalance(true);
       return;
     }
+
+    setInsufficientBalance(false);
 
     try {
       setIsLoading(true);
@@ -166,23 +197,56 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
     }
   };
 
-  if (visibleBaskets.length === 0) {
-    return (
-      <Card className="p-12 text-center">
-        <div className="w-16 h-16 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
-          <Plus className="w-8 h-8 text-muted-foreground" />
-        </div>
-        <h3 className="text-lg font-semibold mb-2">No Goals Yet</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Create your first food goal to start saving
-        </p>
-      </Card>
-    );
-  }
-
   return (
-    <>
-      <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Tabs */}
+      <div className="flex bg-muted/30 p-1 w-full max-w-md rounded-[10px] border border-border">
+        <button
+          onClick={() => setTab("NEW")}
+          className={`flex-1 py-1.5 text-sm font-bold rounded-[8px] transition-all flex items-center justify-center gap-2 ${
+            tab === "NEW"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          }`}
+        >
+          Active
+        </button>
+        <button
+          onClick={() => setTab("COMPLETED")}
+          className={`flex-1 py-1.5 text-sm font-bold rounded-[8px] transition-all flex items-center justify-center gap-2 ${
+            tab === "COMPLETED"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          }`}
+        >
+          Completed
+        </button>
+        <button
+          onClick={() => setTab("CANCELLED")}
+          className={`flex-1 py-1.5 text-sm font-bold rounded-[8px] transition-all ${
+            tab === "CANCELLED"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          }`}
+        >
+          Cancelled
+        </button>
+      </div>
+
+      {visibleBaskets.length === 0 ? (
+        <Card className="p-12 text-center">
+          <div className="w-16 h-16 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
+            <Plus className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold mb-2">
+            {tab === "NEW" ? "No Active Goals" : tab === "COMPLETED" ? "No Completed Goals" : "No Cancelled Goals"}
+          </h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            {tab === "NEW" ? "Create your first food goal to start saving" : "Nothing to show here"}
+          </p>
+        </Card>
+      ) : (
+        <div className="space-y-4">
         {visibleBaskets.map((goal, i) => {
           const isCancelled = goal.status === "CANCELLED";
           const progress = (goal.currentAmount / goal.goalAmount) * 100;
@@ -348,6 +412,7 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
           );
         })}
       </div>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <Dialog
@@ -394,19 +459,24 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
                 Are you sure you want to cancel your <span className="font-bold">{goalToCancel?.name}</span>
                 goal?
               </p>
-              {goalToCancel && goalToCancel.currentAmount > 0 && (
-                <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
-                  <p className="font-bold flex items-center gap-2 mb-1">
-                    <span className="text-lg">⚠️</span> Refund Warning
-                  </p>
-                  <p>
-                    Your saved funds of <span className="font-bold">₦
-                    {goalToCancel.currentAmount.toLocaleString()}</span> will be
-                    returned back to your primary wallet immediately. However,
-                    you will lose your progress towards this food basket.
-                  </p>
-                </div>
-              )}
+              {goalToCancel && goalToCancel.currentAmount > 0 && (() => {
+                const amount = goalToCancel.currentAmount;
+                const penalty = amount * 0.05;
+                const refund = amount - penalty;
+                return (
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
+                    <p className="font-bold flex items-center gap-2 mb-1 text-red-600">
+                      <span className="text-lg">⚠️</span> Early Cancellation Fee
+                    </p>
+                    <p className="mb-2">
+                      An early cancellation fee of <span className="font-bold">5% (₦{penalty.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</span> will be deducted from your savings.
+                    </p>
+                    <p>
+                      You will receive <span className="font-bold text-green-700">₦{refund.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> back into your primary wallet immediately. You will also lose your progress towards this goal.
+                    </p>
+                  </div>
+                );
+              })()}
               <p className="text-xs text-muted-foreground mt-2">
                 This goal will be moved to a cancelled state. You can
                 permanently delete it later if you wish.
@@ -461,7 +531,7 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
             </div>
 
             <div className="grid grid-cols-3 gap-2">
-              {[5000, 10000, 20000].map((amt) => (
+              {[500, 1000, 5000].map((amt) => (
                 <Button
                   key={amt}
                   variant="outline"
@@ -483,9 +553,35 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
               </p>
             </div>
 
+            {insufficientBalance && (
+              <div className="p-3 rounded-lg bg-red-50 border border-red-200 space-y-3">
+                <div className="flex items-center gap-2 text-red-700">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <p className="text-sm font-medium">
+                    Not enough balance in your wallet
+                  </p>
+                </div>
+                <p className="text-xs text-red-600">
+                  You need ₦{((parseFloat(amount) - (balance || 0))).toLocaleString()} more to fund this goal. Top up your wallet first.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2 border-red-300 text-red-700 hover:bg-red-100 hover:text-red-800"
+                  onClick={() => {
+                    setAddFundsOpen(false);
+                    setShowDepositModal(true);
+                  }}
+                >
+                  <Wallet className="w-4 h-4" />
+                  Deposit to Wallet
+                </Button>
+              </div>
+            )}
+
             <Button
               onClick={confirmAddFunds}
-              disabled={isLoading || !amount || parseFloat(amount) <= 0}
+              disabled={isLoading || !amount || parseFloat(amount) < 500}
               className="w-full"
             >
               {isLoading ? "Processing..." : "Add Funds"}
@@ -493,6 +589,9 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
           </div>
         </DialogContent>
       </Dialog>
-    </>
+
+      {/* Deposit Modal */}
+      <DepositModal open={showDepositModal} onOpenChange={setShowDepositModal} />
+    </div>
   );
 }
