@@ -45,20 +45,29 @@ export async function POST(
       );
     }
 
-    const reversalAmount = basket.currentAmount;
-    const hasFunds = reversalAmount.greaterThan(0);
+    const originalAmount = basket.currentAmount;
+    const hasFunds = originalAmount.greaterThan(0);
+
+    // Apply 5% Early Cancellation Fee
+    let penaltyAmount = new Prisma.Decimal(0);
+    let netRefundAmount = originalAmount;
+    
+    if (hasFunds) {
+       penaltyAmount = originalAmount.mul(0.05);
+       netRefundAmount = originalAmount.sub(penaltyAmount);
+    }
 
     // Perform cancellation and reversal in a transaction
     const result = await prisma.$transaction(async (tx) => {
       let updatedWallet = wallet;
 
       if (hasFunds) {
-        // Increment wallet balance
+        // Increment wallet balance with only the net amount
         updatedWallet = await tx.wallet.update({
           where: { id: wallet.id },
           data: {
             balance: {
-              increment: reversalAmount,
+              increment: netRefundAmount,
             },
           },
         });
@@ -70,9 +79,9 @@ export async function POST(
             walletId: wallet.id,
             basketId: basket.id,
             type: "TRANSFER_FROM_BASKET",
-            amount: reversalAmount,
-            netAmount: reversalAmount,
-            description: `Refund from cancelled goal: ${basket.name}`,
+            amount: originalAmount,
+            netAmount: netRefundAmount,
+            description: `Refund from cancelled goal: ${basket.name} (5% fee applied)`,
             status: "COMPLETED",
             balanceBefore: wallet.balance,
             balanceAfter: updatedWallet.balance,
@@ -102,9 +111,9 @@ export async function POST(
       await logFinancialAction(
         session.user.id,
         "transfer_from_basket",
-        `Refunded ₦${reversalAmount.toFixed(2)} from cancelled goal: ${basket.name}`,
+        `Refunded ₦${netRefundAmount.toFixed(2)} from cancelled goal: ${basket.name}`,
         {
-          amount: reversalAmount.toString(),
+          amount: netRefundAmount.toString(),
           basketId,
           basketName: basket.name,
           newBalance: result.wallet.balance.toString(),
@@ -115,7 +124,7 @@ export async function POST(
       await sendTransactionNotification(
         session.user.id,
         "TRANSFER_FROM_BASKET",
-        reversalAmount.toNumber(),
+        netRefundAmount.toNumber(),
         "COMPLETED"
       );
     }
@@ -137,6 +146,7 @@ export async function POST(
     });
   } catch (error: any) {
     console.error("Cancel goal error:", error);
+   // console.log("Cancel goal error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to cancel goal" },
       { status: 500 }

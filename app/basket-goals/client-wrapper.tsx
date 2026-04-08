@@ -5,7 +5,7 @@ import { CreateGoalCard } from "@/components/goals/create-goal-card";
 import { GoalsList } from "@/components/goals/goals-list";
 import { GoalsHeader } from "@/components/goals/goals-header";
 import { COMMODITIES } from "@/constants/commodities";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import axios from "axios";
 import {
   Dialog,
@@ -19,7 +19,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { format } from "date-fns";
-import { toast } from "sonner";
+import { useRouter, useSearchParams } from "next/navigation";
+
+// ... [rest of interfaces and component definition unchanged]
 
 interface Basket {
   id: string;
@@ -41,7 +43,7 @@ interface BasketGoalsClientWrapperProps {
   walletBalance: number;
 }
 
-export default function BasketGoalsClientWrapper({
+function BasketGoalsClientInner({
   serializedBaskets,
   walletBalance: initialWalletBalance,
 }: BasketGoalsClientWrapperProps) {
@@ -49,11 +51,19 @@ export default function BasketGoalsClientWrapper({
   const [walletBalance, setWalletBalance] = useState(initialWalletBalance);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showDeliveriesDialog, setShowDeliveriesDialog] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("deliveries") === "true") {
+      setShowDeliveriesDialog(true);
+    }
+  }, [searchParams]);
 
   const completedBaskets = baskets.filter(
-    (b) =>
-      b.status === "COMPLETED" ||
-      (b.status === "ACTIVE" && b.currentAmount >= b.goalAmount)
+    (b: any) => 
+      ((b.status === "ACTIVE" && b.currentAmount >= b.goalAmount) || b.status === "COMPLETED") && 
+      (!b.deliveries || b.deliveries.filter((d: any) => d.status !== "CANCELLED").length === 0)
   );
 
   const fetchBaskets = useCallback(async () => {
@@ -90,33 +100,22 @@ export default function BasketGoalsClientWrapper({
     fetchBaskets();
   }, [fetchBaskets]);
 
-  const handleRequestDelivery = async (basketId: string) => {
-    try {
-      await axios.post(`/api/baskets/${basketId}/request-delivery`);
-      toast.success("Delivery request submitted! We'll contact you soon.");
-      fetchBaskets();
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to request delivery");
-    }
-  };
-
   return (
-    <div className="container mx-auto px-4 md:px-6 space-y-6 pt-20 pb-24 md:pb-8 mt-6">
+    <div className="container mx-auto px-4 md:px-6 space-y-6 pt-4 md:pt-20 pb-24 md:pb-8 mt-2 md:mt-6">
       <GoalsHeader
         completedGoalsCount={completedBaskets.length}
         onViewDeliveries={() => setShowDeliveriesDialog(true)}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+        <div className="order-2 lg:order-1 lg:col-span-2">
           <GoalsList
             baskets={baskets}
             balance={walletBalance}
             onUpdate={handleRefresh}
           />
         </div>
-        <div>
+        <div className="order-1 lg:order-2">
           <CreateGoalCard onGoalCreated={handleRefresh} />
         </div>
       </div>
@@ -199,8 +198,8 @@ export default function BasketGoalsClientWrapper({
                           </div>
                           <Button
                             onClick={() => {
-                              handleRequestDelivery(basket.id);
                               setShowDeliveriesDialog(false);
+                              router.push(`/basket-goals/delivery/${basket.id}`);
                             }}
                             className="bg-green-600 hover:bg-green-700"
                           >
@@ -217,5 +216,13 @@ export default function BasketGoalsClientWrapper({
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function BasketGoalsClientWrapper(props: BasketGoalsClientWrapperProps) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <BasketGoalsClientInner {...props} />
+    </Suspense>
   );
 }

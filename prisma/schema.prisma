@@ -167,9 +167,9 @@ model Transaction {
 
   // Transaction details
   type      TransactionType
-  amount    Decimal         @db.Decimal(15, 2)
-  fee       Decimal?        @db.Decimal(15, 2)
-  netAmount Decimal         @db.Decimal(15, 2) // amount - fee
+  amount    Decimal         @db.Decimal(18, 2)
+  fee       Decimal?        @db.Decimal(18, 2)
+  netAmount Decimal         @db.Decimal(18, 2) // amount - fee
 
   description   String
   status        TransactionStatus @default(PENDING)
@@ -272,6 +272,7 @@ model Basket {
 
   transactions Transaction[]
   basketOrders BasketOrder[]
+  deliveries   Delivery[]
 
   @@index([userId])
   @@index([status])
@@ -389,24 +390,55 @@ model MarketplaceOrderItem {
 // DELIVERIES
 // ============================================ 
 model Delivery {
-  id           String    @id @default(cuid())
+  id           String @id @default(cuid())
   userId       String
   deliveryType String // "BASKET", "MARKETPLACE"
   orderId      String
-  status       String    @default("PENDING") // PENDING, IN_TRANSIT, DELIVERED, CANCELLED
+
+  // Status flow: PENDING → CONFIRMED → PREPARING → IN_TRANSIT → DELIVERED | CANCELLED
+  status String @default("PENDING")
+
+  // Address
   address      String
-  courierInfo  Json?
+  addressLabel String? // "Home", "Office", etc.
+  deliveryNote String? // "Call me when you arrive"
+
+  // Delivery option & fees
+  deliveryOption String  @default("STANDARD") // "EXPRESS", "STANDARD", "SCHEDULED"
+  deliveryFee    Decimal @default(0) @db.Decimal(15, 2)
+  serviceFee     Decimal @default(0) @db.Decimal(15, 2)
+
+  // Rider info (simulated)
+  courierInfo Json?
+  riderName   String?
+  riderPhone  String?
+  riderRating Float?
+
+  // Timing
+  estimatedAt  DateTime? // Estimated delivery time
+  confirmedAt  DateTime?
+  preparingAt  DateTime?
   requestedAt  DateTime  @default(now())
   dispatchedAt DateTime?
   deliveredAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+
+  // Post-delivery feedback
+  userRating Int?     // 1-5 stars
+  userTip    Decimal? @db.Decimal(15, 2)
+
+  // Basket relation
+  basketId String?
+  basket   Basket? @relation(fields: [basketId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
   @@index([deliveryType])
+  @@index([basketId])
   @@map("deliveries")
 }
 

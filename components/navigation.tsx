@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Wallet, Target, ShoppingBag, User, Leaf } from "lucide-react";
+import { Home, Wallet, Target, ShoppingBag, User, Leaf, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InteractiveMenu } from "@/components/ui/modern-mobile-menu";
 
@@ -10,6 +10,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/wallet", label: "Wallet", icon: Wallet },
   { href: "/basket-goals", label: "My Basket", icon: Target },
+  { href: "/deliveries", label: "Deliveries", icon: Truck },
   { href: "/market", label: "Market", icon: ShoppingBag },
   { href: "/profile", label: "Profile", icon: User },
 ];

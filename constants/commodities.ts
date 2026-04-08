@@ -278,7 +278,7 @@ export const COMMODITIES = [
     unit: "kg",
     size: 50,
     name: "Olotu beans",
-    image: null,
+    image: "/Olotu beans.jpg",
     description: "Drum beans (Olotu - 1 bag)",
   },
   {
@@ -289,7 +289,7 @@ export const COMMODITIES = [
     unit: "kg",
     size: 25,
     name: "Olotu beans",
-    image: null,
+    image: "/Olotu beans.jpg",
     description: "Olotu beans (Olotu - half bag)",
   },
   {
@@ -300,7 +300,7 @@ export const COMMODITIES = [
     unit: "kg",
     size: 12.5,
     name: "Olotu beans",
-    image: null,
+    image: "/Olotu beans.jpg",
     description: "Olotu beans (Olotu - quarter bag)",
   },
 
@@ -312,7 +312,7 @@ export const COMMODITIES = [
     unit: "kg",
     size: 50,
     name: "White beans",
-    image: null,
+    image: "/Sokoto Beans.png",
     description: "White beans (1 bag)",
   },
   {
@@ -323,7 +323,7 @@ export const COMMODITIES = [
     unit: "kg",
     size: 25,
     name: "White beans",
-    image: null,
+    image: "/Sokoto Beans.png",
     description: "White beans (half bag)",
   },
   {
@@ -334,7 +334,7 @@ export const COMMODITIES = [
     unit: "kg",
     size: 12.5,
     name: "White beans",
-    image: null,
+    image: "/Sokoto Beans.png",
     description: "White beans (quarter bag)",
   },
 
@@ -349,7 +349,7 @@ export const COMMODITIES = [
     unit: "kg",
     size: 50,
     name: "Yellow garri",
-    image: null,
+    image: "/Yellow garri.webp",
     description: "Yellow garri (1 bag)",
   },
   {
@@ -360,7 +360,7 @@ export const COMMODITIES = [
     unit: "kg",
     size: 25,
     name: "Yellow garri",
-    image: null,
+    image: "/Yellow garri.webp",
     description: "Yellow garri (half bag)",
   },
   {
@@ -371,7 +371,7 @@ export const COMMODITIES = [
     unit: "kg",
     size: 12.5,
     name: "Yellow garri",
-    image: null,
+    image: "/Yellow garri.webp",
     description: "Yellow garri (quarter bag)",
   },
 
@@ -383,7 +383,7 @@ export const COMMODITIES = [
     unit: "kg",
     size: 50,
     name: "White garri",
-    image: null,
+    image: "/Garri-2.jpg",
     description: "White garri (Ijebu - 1 bag)",
   },
   {
@@ -394,7 +394,7 @@ export const COMMODITIES = [
     unit: "kg",
     size: 25,
     name: "White garri",
-    image: null,
+    image: "/Garri-2.jpg",
     description: "White garri (Ijebu - half bag)",
   },
   {
@@ -405,7 +405,7 @@ export const COMMODITIES = [
     unit: "kg",
     size: 12.5,
     name: "White garri",
-    image: null,
+    image: "/Garri-2.jpg",
     description: "White garri (Ijebu - quarter bag)",
   },
 ];
