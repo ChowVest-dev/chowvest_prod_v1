@@ -16,9 +16,8 @@ export function QuickActions() {
   };
 
   const handleRequestDelivery = () => {
-    // Navigate to delivery page or open delivery modal
-    router.push("/delivery");
-    // Or open a delivery modal: setDeliveryModalOpen(true);
+    // Navigate to basket goals with query param to open delivery dialog
+    router.push("/basket-goals?deliveries=true");
   };
 
   return (

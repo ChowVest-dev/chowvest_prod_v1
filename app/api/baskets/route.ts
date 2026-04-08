@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
         where: { userId: session.user.id },
         orderBy: { createdAt: "desc" },
         include: {
+          deliveries: true,
           _count: {
             select: { transactions: true },
           },

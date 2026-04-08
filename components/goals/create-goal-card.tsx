@@ -64,12 +64,13 @@ const getSizeVariants = (category: string, commodityName: string) => {
   return commodities.filter((c) => c.name === commodityName);
 };
 
-type Step = "category" | "type" | "size" | "date" | "review";
+type Step = "category" | "type" | "size" | "quantity" | "date" | "review";
 
 interface GoalData {
   category: string;
   commodityType: string;
   selectedCommodity: (typeof COMMODITIES)[0] | null;
+  quantity: number;
   targetDate: string;
 }
 
@@ -82,8 +83,9 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
     category: "",
     commodityType: "",
     selectedCommodity: null,
-    targetDate: "",
-  });
+    quantity: 1,
+      targetDate: "",
+    });
 
   const resetModal = () => {
     setCurrentStep("category");
@@ -91,6 +93,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
       category: "",
       commodityType: "",
       selectedCommodity: null,
+      quantity: 1,
       targetDate: "",
     });
   };
@@ -123,6 +126,14 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
 
   const handleSizeSelect = (commodity: (typeof COMMODITIES)[0]) => {
     setGoalData({ ...goalData, selectedCommodity: commodity });
+    setCurrentStep("quantity");
+  };
+
+  const handleQuantitySelect = () => {
+    if (goalData.quantity < 1 || goalData.quantity > 10) {
+      toast.error("Quantity must be between 1 and 10");
+      return;
+    }
     setCurrentStep("date");
   };
 
@@ -137,7 +148,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
   };
 
   const handleBack = () => {
-    const stepOrder: Step[] = ["category", "type", "size", "date", "review"];
+    const stepOrder: Step[] = ["category", "type", "size", "quantity", "date", "review"];
     const currentIndex = stepOrder.indexOf(currentStep);
     if (currentIndex > 0) {
       setCurrentStep(stepOrder[currentIndex - 1]);
@@ -156,12 +167,12 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
       setIsLoading(true);
 
       await axios.post("/api/baskets", {
-        name: `${commodity.name} (${commodity.size}${commodity.unit})`,
+        name: `${goalData.quantity}x ${commodity.name} (${commodity.size}${commodity.unit})`,
         commodityType: commodity.sku,
         image: commodity.image,
-        goalAmount: commodity.price,
+        goalAmount: commodity.price * goalData.quantity,
         targetDate: goalData.targetDate,
-        regularTopUp: Math.round(commodity.price / 10),
+        regularTopUp: Math.round((commodity.price * goalData.quantity) / 10),
         description: commodity.description,
       });
 
@@ -188,6 +199,8 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
         return "Select Commodity Type";
       case "size":
         return "Select Size";
+      case "quantity":
+        return "Select Quantity";
       case "date":
         return "Set Target Date";
       case "review":
@@ -204,7 +217,9 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
       case "type":
         return "Select the specific type of commodity";
       case "size":
-        return "Choose your preferred size and quantity";
+        return "Choose your preferred size";
+      case "quantity":
+        return "How many units do you want to save for? (Max 10)";
       case "date":
         return "When do you want to reach this goal?";
       case "review":
@@ -407,6 +422,69 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
               </div>
             )}
 
+            
+            {/* Step 3.5: Quantity Selection */}
+            {currentStep === "quantity" && goalData.selectedCommodity && (
+              <div className="space-y-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleBack}
+                  className="mb-2"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Quantity
+                </Button>
+                <div className="max-w-md mx-auto space-y-6">
+                  <div className="space-y-4">
+                    <Label className="text-lg">Quantity (Max: 10)</Label>
+                    <div className="flex items-center gap-4">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setGoalData({ ...goalData, quantity: Math.max(1, goalData.quantity - 1) })}
+                        disabled={goalData.quantity <= 1}
+                      >
+                        -
+                      </Button>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={10}
+                        value={goalData.quantity}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 1;
+                          setGoalData({ ...goalData, quantity: Math.min(10, Math.max(1, val)) });
+                        }}
+                        className="text-center text-lg font-bold"
+                      />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setGoalData({ ...goalData, quantity: Math.min(10, goalData.quantity + 1) })}
+                        disabled={goalData.quantity >= 10}
+                      >
+                        +
+                      </Button>
+                    </div>
+                    <div className="p-4 bg-primary/10 rounded-xl border border-primary/20 flex justify-between items-center">
+                      <span className="text-muted-foreground">Total Goal Amount:</span>
+                      <span className="text-xl font-bold text-primary">
+                        ₦{(goalData.selectedCommodity.price * goalData.quantity).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    className="w-full"
+                    onClick={handleQuantitySelect}
+                  >
+                    Continue to Date
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Step 4: Target Date Selection */}
             {currentStep === "date" && (
               <div className="space-y-4">
@@ -417,7 +495,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                   className="mb-2"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Size
+                  Back to Quantity
                 </Button>
                 <div className="max-w-md mx-auto space-y-6">
                   <div className="p-6 bg-primary/10 rounded-xl border border-primary/20">
@@ -484,7 +562,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                         <div>
                           <p className="text-xs text-muted-foreground">Size</p>
                           <p className="font-semibold">
-                            {goalData.selectedCommodity.size}
+                            {goalData.quantity}x {goalData.selectedCommodity.size}
                             {goalData.selectedCommodity.unit}
                           </p>
                         </div>
@@ -493,7 +571,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                             Target Amount
                           </p>
                           <p className="font-semibold text-primary text-lg">
-                            ₦{goalData.selectedCommodity.price.toLocaleString()}
+                            ₦{(goalData.selectedCommodity.price * goalData.quantity).toLocaleString()}
                           </p>
                         </div>
                         <div>
@@ -520,7 +598,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                         <p className="font-semibold text-sm">
                           ₦
                           {Math.round(
-                            goalData.selectedCommodity.price / 10,
+                            (goalData.selectedCommodity.price * goalData.quantity) / 10,
                           ).toLocaleString()}
                         </p>
                       </div>
