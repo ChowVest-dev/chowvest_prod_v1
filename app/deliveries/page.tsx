@@ -74,7 +74,7 @@ export default async function DeliveriesPage() {
       deliveredAt: d.deliveredAt ? d.deliveredAt.toISOString() : null,
       basketId: d.basketId,
       commodityName: commodityName || "Food Items",
-      image: imageSrc || "/placeholder.svg",
+      image: imageSrc || "/rice.jpg",
       amount: d.basket?.goalAmount ? Number(d.basket.goalAmount) : 0,
       riderName: d.riderName,
     };
@@ -105,7 +105,7 @@ export default async function DeliveriesPage() {
     return {
       id: b.id,
       name: commodityName,
-      image: imageSrc || "/placeholder.svg",
+      image: imageSrc || "/rice.jpg",
       goalAmount: Number(b.goalAmount),
     };
   });

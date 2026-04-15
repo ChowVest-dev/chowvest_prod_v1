@@ -89,10 +89,10 @@ function DeliveriesContent({ deliveries, readyBaskets = [] }: DeliveriesWrapperP
                 <PackageOpen className="w-8 h-8 text-muted-foreground" />
               </div>
               <h3 className="text-lg font-bold text-foreground mb-1">
-                No Goals Ready
+                No baskets ready for delivery yet
               </h3>
               <p className="text-muted-foreground text-sm max-w-sm">
-                You don't have any completed goals ready for delivery.
+                Reach 100% on a goal to bring your food home!
               </p>
             </div>
           ) : (
@@ -112,7 +112,7 @@ function DeliveriesContent({ deliveries, readyBaskets = [] }: DeliveriesWrapperP
                     className="mt-2"
                     onClick={() => router.push(`/basket-goals/delivery/${basket.id}`)}
                   >
-                    Request Delivery
+                    Bring it home
                   </Button>
                 </div>
               </Card>
@@ -128,7 +128,7 @@ function DeliveriesContent({ deliveries, readyBaskets = [] }: DeliveriesWrapperP
             </h3>
             <p className="text-muted-foreground text-sm max-w-sm">
               {tab === "ACTIVE" 
-                ? "You don't have any ongoing deliveries. When you complete a savings goal, request delivery and track it here."
+                ? "Reach 100% on a goal to bring your food home!"
                 : "You don't have any completed deliveries yet."}
             </p>
           </div>

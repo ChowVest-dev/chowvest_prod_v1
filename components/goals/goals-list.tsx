@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Plus, MoreVertical, AlertCircle, Wallet } from "lucide-react";
+import { BouncingDots } from "@/components/ui/bouncing-dots";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useState } from "react";
@@ -26,7 +27,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
-import { DepositModal } from "@/components/wallet/deposit-modal";
+import { DepositModal } from "@/components/wallet/deposit-modal"; 
+import { useRouter } from "next/navigation";
 
 interface Basket {
   id: string;
@@ -49,6 +51,7 @@ interface GoalsListProps {
 }
 
 export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
+  const router = useRouter();
   const [selectedBasket, setSelectedBasket] = useState<string | null>(null);
   const [addFundsOpen, setAddFundsOpen] = useState(false);
   const [goalToDelete, setGoalToDelete] = useState<string | null>(null);
@@ -62,11 +65,13 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
   const visibleBaskets = baskets.filter(
     (b: any) => {
       const isNotDelivered = !b.deliveries || b.deliveries.filter((d: any) => d.status !== "CANCELLED").length === 0;
+      const isReached = b.currentAmount >= b.goalAmount;
+
       if (tab === "NEW") {
-        return b.status === "ACTIVE" && isNotDelivered;
+        return b.status === "ACTIVE" && !isReached && isNotDelivered;
       }
       if (tab === "COMPLETED") {
-        return b.status === "COMPLETED" && isNotDelivered;
+        return (b.status === "COMPLETED" || (b.status === "ACTIVE" && isReached)) && isNotDelivered;
       }
       if (tab === "CANCELLED") {
         return b.status === "CANCELLED";
@@ -130,24 +135,8 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
     }
   };
 
-  const handleRequestDelivery = async (basketId: string) => {
-    try {
-      setIsLoading(true);
-
-      await axios.post(`/api/baskets/${basketId}/request-delivery`);
-
-      toast.success("Delivery request submitted! We'll contact you soon.");
-
-      // Trigger refresh
-      if (onUpdate) {
-        onUpdate();
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to request delivery");
-    } finally {
-      setIsLoading(false);
-    }
+  const handleRequestDelivery = (basketId: string) => {
+    router.push(`/basket-goals/delivery/${basketId}`);
   };
 
   const confirmAddFunds = async () => {
@@ -239,10 +228,10 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
             <Plus className="w-8 h-8 text-muted-foreground" />
           </div>
           <h3 className="text-lg font-semibold mb-2">
-            {tab === "NEW" ? "No Active Goals" : tab === "COMPLETED" ? "No Completed Goals" : "No Cancelled Goals"}
+            {tab === "NEW" ? "Ready to start stocking up?" : tab === "COMPLETED" ? "No Completed Goals" : "No Cancelled Goals"}
           </h3>
           <p className="text-sm text-muted-foreground mb-4">
-            {tab === "NEW" ? "Create your first food goal to start saving" : "Nothing to show here"}
+            {tab === "NEW" ? "Start a new saving plan to secure your food supply." : "Nothing to show here"}
           </p>
         </Card>
       ) : (
@@ -310,7 +299,7 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
                         </Badge>
                         {progress >= 100 && !isCancelled && (
                           <Badge className="text-xs bg-green-500 hover:bg-green-600">
-                            Goal Reached!
+                            Ready for Home!
                           </Badge>
                         )}
                         {isCancelled && (
@@ -322,11 +311,9 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
                       <p className="text-sm text-muted-foreground">
                         {isCancelled
                           ? "Goal was cancelled"
-                          : `Target by ${
-                              goal.targetDate
-                                ? format(new Date(goal.targetDate), "MMM d, yyyy")
-                                : "No deadline"
-                            }`}
+                          : `Reach your basket by ${goal.targetDate
+                              ? format(new Date(goal.targetDate), "MMM d, yyyy")
+                              : "No deadline"}`}
                       </p>
                     </div>
                     <DropdownMenu>
@@ -345,14 +332,14 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
                             className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
                             onClick={() => setGoalToDelete(goal.id)}
                           >
-                            Delete Goal Permanentlly
+                            Remove from history
                           </DropdownMenuItem>
                         ) : (
                           <DropdownMenuItem
                             className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
                             onClick={() => setGoalToCancel(goal)}
                           >
-                            Cancel Goal
+                            End savings plan
                           </DropdownMenuItem>
                         )}
                       </DropdownMenuContent>
@@ -392,7 +379,7 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
                         className="gap-2 bg-green-600 hover:bg-green-700"
                         onClick={() => handleRequestDelivery(goal.id)}
                       >
-                        Request Delivery
+                        Deliver My Basket
                       </Button>
                     ) : (
                       <Button
@@ -402,7 +389,7 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
                         disabled={isCancelled}
                       >
                         <Plus className="w-4 h-4" />
-                        Add Funds
+                        Top Up Basket
                       </Button>
                     )}
                   </div>
@@ -453,7 +440,7 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Cancel Savings Goal?</DialogTitle>
+            <DialogTitle>End this savings plan?</DialogTitle>
             <DialogDescription className="space-y-3">
               <p>
                 Are you sure you want to cancel your <span className="font-bold">{goalToCancel?.name}</span>
@@ -496,7 +483,7 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
               onClick={handleCancelGoal}
               disabled={isLoading}
             >
-              {isLoading ? "Cancelling..." : "Confirm Cancellation"}
+              {isLoading ? "Ending..." : "End Plan"}
             </Button>
           </div>
         </DialogContent>
@@ -506,9 +493,9 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
       <Dialog open={addFundsOpen} onOpenChange={setAddFundsOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Funds to Goal</DialogTitle>
+            <DialogTitle>Top Up Your Basket</DialogTitle>
             <DialogDescription>
-              Transfer funds from your wallet to this goal
+              Add funds from your wallet to complete your basket.
             </DialogDescription>
           </DialogHeader>
 
@@ -562,7 +549,7 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
                   </p>
                 </div>
                 <p className="text-xs text-red-600">
-                  You need ₦{((parseFloat(amount) - (balance || 0))).toLocaleString()} more to fund this goal. Top up your wallet first.
+                  You need ₦{((parseFloat(amount) - (balance || 0))).toLocaleString()} more to secure this basket. Fund your wallet first.
                 </p>
                 <Button
                   variant="outline"
@@ -584,7 +571,7 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
               disabled={isLoading || !amount || parseFloat(amount) < 500}
               className="w-full"
             >
-              {isLoading ? "Processing..." : "Add Funds"}
+              {isLoading ? "Processing..." : "Top Up Now"}
             </Button>
           </div>
         </DialogContent>

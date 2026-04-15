@@ -5,8 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
-  Repeat,
+  ShoppingBasket,
   ShoppingBag,
+  Truck,
+  RotateCcw,
 } from "lucide-react";
 //import { useWalletStore } from "@/store/wallet-store";
 import { format, isToday, isYesterday } from "date-fns";
@@ -14,10 +16,12 @@ import { format, isToday, isYesterday } from "date-fns";
 const iconMap = {
   DEPOSIT: ArrowDownToLine,
   WITHDRAWAL: ArrowUpFromLine,
-  TRANSFER_TO_BASKET: Repeat,
-  TRANSFER_FROM_BASKET: Repeat,
+  TRANSFER_TO_BASKET: ShoppingBasket,
+  TRANSFER_FROM_BASKET: ShoppingBasket,
   MARKET_PURCHASE: ShoppingBag,
   REFUND: ArrowDownToLine,
+  FEE: Truck,
+  REVERSAL: RotateCcw,
 };
 
 const statusColors = {
@@ -31,6 +35,8 @@ interface Transaction {
   id: string;
   type: string;
   amount: number;
+  netAmount: number;
+  metadata?: { baseAmount?: number } | null;
   description: string;
   status: string;
   createdAt: string;
@@ -91,7 +97,7 @@ export function TransactionHistory({ transactions }: TransactionHistoryProps) {
         ) : (
           transactions.map((transaction) => {
             const Icon =
-              iconMap[transaction.type as keyof typeof iconMap] || Repeat;
+              iconMap[transaction.type as keyof typeof iconMap] || ArrowDownToLine;
             const isPositive = isPositiveTransaction(transaction.type);
 
             return (
@@ -127,7 +133,11 @@ export function TransactionHistory({ transactions }: TransactionHistoryProps) {
                     }`}
                   >
                     {isPositive ? "+" : ""}₦
-                    {Math.abs(transaction.amount).toLocaleString()}
+                    {Math.abs(
+                      isPositive
+                        ? (transaction.metadata?.baseAmount || transaction.netAmount || transaction.amount)
+                        : transaction.amount
+                    ).toLocaleString()}
                   </p>
                   <Badge
                     className={`text-xs mt-1 border ${

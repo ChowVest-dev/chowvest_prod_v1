@@ -14,23 +14,23 @@ export function StatsCards({
 }: StatsCardsProps) {
   const stats = [
     {
-      label: "Total Savings",
+      label: "Total Saved",
       value: `₦${totalSavings.toLocaleString()}`,
-      change: "Total saved towards food",
+      change: "Funds secured for your foodstock.",
       icon: TrendingUp,
       trend: "up",
     },
     {
       label: "Wallet Balance",
       value: `₦${walletBalance.toLocaleString()}`,
-      change: "Available in your wallet",
+      change: "Ready to top up your baskets.",
       icon: Wallet,
       trend: "neutral",
     },
     {
-      label: "Current Food Plans",
+      label: "Active Baskets",
       value: activeGoalsCount.toString(),
-      change: "Active basket goals",
+      change: "Baskets you're currently filling.",
       icon: Target,
       trend: "up",
     },

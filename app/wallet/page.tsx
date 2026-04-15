@@ -52,6 +52,8 @@ export default async function WalletPage() {
       id: t.id,
       type: t.type,
       amount: Number(t.amount),
+      netAmount: Number(t.netAmount ?? t.amount),
+      metadata: t.metadata as { baseAmount?: number } | null,
       description: t.description,
       status: t.status,
       createdAt: t.createdAt.toISOString(),

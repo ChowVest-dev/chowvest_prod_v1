@@ -194,17 +194,17 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
   const getStepTitle = () => {
     switch (currentStep) {
       case "category":
-        return "Select Category";
+        return "What are you stocking up on?";
       case "type":
-        return "Select Commodity Type";
+        return "Choose your preferred item";
       case "size":
-        return "Select Size";
+        return "How much do you need?";
       case "quantity":
         return "Select Quantity";
       case "date":
-        return "Set Target Date";
+        return "Price Protection";
       case "review":
-        return "Review & Confirm";
+        return "Review Your Basket";
       default:
         return "";
     }
@@ -213,17 +213,17 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
   const getStepDescription = () => {
     switch (currentStep) {
       case "category":
-        return "Choose the category of commodity you want to save for";
+        return "Pick a food group to start your basket";
       case "type":
-        return "Select the specific type of commodity";
+        return "Select the specific brand or variety";
       case "size":
-        return "Choose your preferred size";
+        return "Choose a size that fits your needs";
       case "quantity":
-        return "How many units do you want to save for? (Max 10)";
+        return "How many units do you want to secure? (Max 10)";
       case "date":
-        return "When do you want to reach this goal?";
+        return "Lock in today's price for your future delivery";
       case "review":
-        return "Review your goal details before creating";
+        return "Check your basket details before starting";
       default:
         return "";
     }
@@ -241,22 +241,22 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
             <Plus className="w-5 h-5 text-primary" />
           </div>
           <h3 className="text-xl font-semibold text-foreground">
-            Create New Goal
+            Beat food inflation now
           </h3>
         </div>
 
         <p className="text-sm text-muted-foreground mb-4">
-          Start a new savings goal for your favorite commodities
+          Lock in current prices for your food essentials.
         </p>
 
         <Button className="w-full">
           <Plus className="w-4 h-4 mr-2" />
-          Get Started
+          Build Your Basket
         </Button>
 
         <div className="mt-6 p-4 rounded-lg bg-accent/30">
           <p className="text-xs text-muted-foreground text-center">
-            Set your food goals, save steadily, and grow your Chowvest basket.
+            Lock in prices today, save at your own pace, and fill your basket.
           </p>
         </div>
       </Card>
@@ -478,7 +478,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                     className="w-full"
                     onClick={handleQuantitySelect}
                   >
-                    Continue to Date
+                    Set Price Protection
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
@@ -500,14 +500,14 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                 <div className="max-w-md mx-auto space-y-6">
                   <div className="p-6 bg-primary/10 rounded-xl border border-primary/20">
                     <p className="text-center text-foreground font-medium leading-relaxed text-[15px]">
-                      Start a plan and lock in today's food price for up to 90 days. If prices go up, you pay less. If they go down, you enjoy the lower price.
+                      Secure the best price. Don't let rising food costs surprise you later.
                     </p>
                   </div>
                   <Button
                     className="w-full"
                     onClick={handleDateSelect}
                   >
-                    Continue to Review
+                    Review My Basket
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
@@ -576,7 +576,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">
-                            Target Date
+                            Save Before
                           </p>
                           <p className="font-semibold">
                             {new Date(goalData.targetDate).toLocaleDateString(
@@ -620,7 +620,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                     onClick={handleCreateGoal}
                     disabled={isLoading}
                   >
-                    {isLoading ? "Creating..." : "Create Goal"}
+                    {isLoading ? "Starting..." : "Confirm My Basket"}
                     <Check className="w-4 h-4 ml-2" />
                   </Button>
                 </div>

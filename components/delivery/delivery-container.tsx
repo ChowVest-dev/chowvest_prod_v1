@@ -1,5 +1,6 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
-import Image from "next/image";
+//import Image from "next/image";
 
 interface DeliveryContainerProps {
   children: ReactNode;
@@ -12,21 +13,21 @@ export function DeliveryContainer({ children, commodityName, mode = "CHECKOUT" }
     <div className="min-h-screen bg-gradient-to-br from-background to-muted flex">
       {/* Left side - Hero section */}
       <div className="hidden md:flex md:w-[55%] bg-gradient-to-br from-primary via-primary to-primary-foreground flex-col justify-between p-12">
-        <div>
+        <Link href="/dashboard">
            <div className="flex items-center gap-3 mb-16">
-            <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center p-2">
-              <span className="text-2xl font-black text-white">C</span>
+            <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center">
+              <img src="/Chowvest-logo.png" alt="Chowvest logo" className="w-12 h-12 objecdivontain" />
             </div>
             <span className="text-2xl font-bold text-primary-foreground">
               Chowvest
             </span>
           </div>
-        </div>
+        </Link>
 
         <div className="space-y-8">
           <div>
             <h1 className="text-5xl font-bold text-primary-foreground mb-6 text-balance">
-              {mode === "CHECKOUT" ? "Goal Reached 🎉" : "On Request 🛵"}
+              {mode === "CHECKOUT" ? "Basket Ready! 🎉" : "On Request 🛵"}
             </h1>
             <p className="text-lg text-primary-foreground/80">
               {mode === "CHECKOUT" ? (

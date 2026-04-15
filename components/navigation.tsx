@@ -2,20 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Wallet, Target, ShoppingBag, User, Leaf, Truck } from "lucide-react";
+import { Home, Wallet, Target, ShoppingBag, User, Leaf, Truck, Box, ShoppingBasket } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { InteractiveMenu } from "@/components/ui/modern-mobile-menu";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/wallet", label: "Wallet", icon: Wallet },
-  { href: "/basket-goals", label: "My Basket", icon: Target },
-  { href: "/deliveries", label: "Deliveries", icon: Truck },
+  { href: "/basket-goals", label: "My Basket", icon: ShoppingBasket },
   { href: "/market", label: "Market", icon: ShoppingBag },
   { href: "/profile", label: "Profile", icon: User },
 ];
 
-export function Navigation() {
+export function Navigation({ activeDeliveryCount = 0 }: { activeDeliveryCount?: number }) {
   const pathname = usePathname();
 
   return (
@@ -26,21 +25,24 @@ export function Navigation() {
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <div className="w-13 h-13 flex items-center justify-center">
-              <img src="/Chowvest-logo.png" alt="Chowvest logo" className="w-13 h-13 object-contain" />
-            </div>
-            <span className="text-xl font-bold text-foreground">Chowvest</span>
+                <img src="/Chowvest-logo.png" alt="Chowvest logo" className="w-13 h-13 object-contain" />
+              </div>
+              <span className="text-xl font-bold text-foreground">Chowvest</span>
             </Link>
 
             <div className="flex items-center gap-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
+                const isBasket = item.href === "/basket-goals";
+                const hasBadge = isBasket && activeDeliveryCount > 0;
+
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors",
+                      "flex items-center gap-2 px-4 py-2 rounded-lg transition-colors relative",
                       isActive
                         ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:text-foreground hover:bg-accent"
@@ -48,6 +50,15 @@ export function Navigation() {
                   >
                     <Icon className="w-4 h-4" />
                     <span className="font-medium">{item.label}</span>
+                    
+                    {hasBadge && (
+                      <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 border-2 border-white flex items-center justify-center text-[8px] text-white font-bold">
+                          {activeDeliveryCount}
+                        </span>
+                      </span>
+                    )}
                   </Link>
                 );
               })}
@@ -57,7 +68,11 @@ export function Navigation() {
       </nav>
 
       {/* Mobile Navigation */}
-      <InteractiveMenu items={navItems} accentColor="var(--primary)" />
+      <InteractiveMenu 
+        items={navItems} 
+        accentColor="var(--primary)" 
+        activeDeliveryCount={activeDeliveryCount}
+      />
     </>
   );
 }
