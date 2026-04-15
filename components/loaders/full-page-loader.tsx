@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { BouncingDots } from "@/components/ui/bouncing-dots";
 
 interface FullPageLoaderProps {
   message?: string;
@@ -41,15 +42,12 @@ export function FullPageLoader({
             </div>
 
         {/* Loading Message */}
-        <div className="flex flex-col items-center gap-2">
-          <div className="flex gap-1">
-            <div className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
-            <div className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
-            <div className="h-2 w-2 animate-bounce rounded-full bg-primary" />
-          </div>
+        <div className="flex flex-col items-center gap-3">
+          <BouncingDots dots={3} className="w-2.5 h-2.5 bg-primary" />
           <p className="text-sm font-medium text-muted-foreground">{message}</p>
         </div>
       </div>
     </div>
   );
 }
+

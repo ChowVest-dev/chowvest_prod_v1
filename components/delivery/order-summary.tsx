@@ -55,8 +55,8 @@ export function OrderSummary({ basket, commodity, onSubmitRequestId, isSubmittin
           <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center p-2 border border-white/20 mb-3">
              <span className="text-2xl">🎉</span>
           </div>
-          <h2 className="text-lg font-bold text-primary-foreground mb-1">Goal Reached!</h2>
-          <p className="text-primary-foreground/80 text-xs">You've successfully saved for this goal.</p>
+          <h2 className="text-lg font-bold text-primary-foreground mb-1">Basket Fully Funded! 🎉</h2>
+          <p className="text-primary-foreground/80 text-xs">Your items are ready to be sent to your door.</p>
         </div>
       </div>
 
@@ -183,7 +183,7 @@ export function OrderSummary({ basket, commodity, onSubmitRequestId, isSubmittin
             onClick={handleSubmit} 
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-14 text-[15px] font-bold shadow-md transition-all mt-4"
          >
-            {isSubmitting ? "Processing..." : "Confirm Request"}
+            {isSubmitting ? "Processing..." : "Bring it home"}
          </Button>
       </div>
 

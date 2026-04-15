@@ -31,7 +31,7 @@ export function QuickActions() {
             onClick={handleAddMoney}
           >
             <Plus className="w-5 h-5" />
-            Add Money
+            Fund Wallet
           </Button>
           <Button
             variant="outline"
@@ -39,7 +39,7 @@ export function QuickActions() {
             onClick={handleRequestDelivery}
           >
             <Package className="w-5 h-5" />
-            Request Delivery
+            Bring it home
           </Button>
         </div>
       </Card>

@@ -15,6 +15,8 @@ interface Transaction {
   id: string;
   type: string;
   amount: number;
+  netAmount: number;
+  metadata?: { baseAmount?: number } | null;
   description: string;
   status: string;
   createdAt: string;
@@ -100,7 +102,7 @@ export function WalletPageClient({ wallet, baskets }: WalletPageClientProps) {
           </div>
         </div>
       )}
-      <div className="container mx-auto px-4 md:px-6 space-y-6 pt-20 pb-24 md:pb-8 mt-6">
+      <div className="container mx-auto px-4 md:px-6 space-y-6 pt-4 md:pt-20 pb-24 md:pb-8 mt-2 md:mt-6">
         <WalletHeader />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {isMobile ? (

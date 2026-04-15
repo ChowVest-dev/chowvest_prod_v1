@@ -28,10 +28,10 @@ export function ActiveGoals({ baskets }: ActiveGoalsProps) {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-xl font-semibold text-foreground">
-            Your Food Basket Goals
+            Your Baskets
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Track your progress toward your targets
+            Items you're securing for your kitchen.
           </p>
         </div>
         <Button
@@ -40,7 +40,7 @@ export function ActiveGoals({ baskets }: ActiveGoalsProps) {
           className="gap-2"
         >
           <Plus className="w-4 h-4" />
-          New Goal
+          Start New Basket
         </Button>
       </div>
 
@@ -81,7 +81,7 @@ export function ActiveGoals({ baskets }: ActiveGoalsProps) {
                     </div>
                     <Progress value={progress} className="h-2" />
                     <p className="text-xs text-primary font-medium">
-                      {progress.toFixed(0)}% complete
+                      {progress.toFixed(0)}% secured
                     </p>
                   </div>
                 </div>

@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { logFinancialAction } from "@/lib/audit";
+import { logSecurityEvent } from "@/lib/security";
 import { sendTransactionNotification } from "@/lib/notifications/create";
 import { Prisma } from "@/lib/generated/prisma/client";
+
+const MAX_TRANSFER_AMOUNT = 1_000_000; // ₦1,000,000 hard cap
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,6 +22,27 @@ export async function POST(req: NextRequest) {
     if (!basketId || !amount || amount <= 0) {
       return NextResponse.json(
         { error: "Invalid basket ID or amount" },
+        { status: 400 }
+      );
+    }
+
+    // Hard cap: transfers above ₦1,000,000 are blocked and flagged
+    if (amount > MAX_TRANSFER_AMOUNT) {
+      await logSecurityEvent({
+        userId: session.user.id,
+        eventType: "large_transfer_attempt",
+        severity: "critical",
+        description: `Transfer of ₦${amount.toLocaleString()} exceeds the ₦1,000,000 maximum limit`,
+        metadata: {
+          attemptedAmount: amount,
+          basketId,
+          limit: MAX_TRANSFER_AMOUNT,
+        },
+        blocked: true,
+      });
+
+      return NextResponse.json(
+        { error: `Transfer amount cannot exceed ₦${MAX_TRANSFER_AMOUNT.toLocaleString()}` },
         { status: 400 }
       );
     }

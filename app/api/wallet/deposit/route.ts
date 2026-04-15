@@ -48,8 +48,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Convert amount to Decimal
-    const amountDecimal = new Prisma.Decimal(amount);
+    // Calculate fees
+    const baseAmount = amount;
+    
+    let serviceFee = 100;
+    if (baseAmount >= 100000) serviceFee = 500;
+    else if (baseAmount >= 50000) serviceFee = 350;
+    else if (baseAmount >= 10000) serviceFee = 200;
+    else serviceFee = 100;
+
+    const subtotal = baseAmount + serviceFee;
+    
+    let processingFee = 0;
+    if (method === "BANK_TRANSFER") {
+      processingFee = subtotal * 0.01; // 1% per transfer
+      if (processingFee > 300) processingFee = 300; // capped at N300
+    } else {
+      // Paystack fee: 1.5% + N100 (N100 waived under N2500, capped at N2000)
+      processingFee = (subtotal * 0.015) + (subtotal < 2500 ? 0 : 100);
+      if (processingFee > 2000) processingFee = 2000;
+    }
+    
+    const totalAmount = subtotal + processingFee;
+
+    // Convert amounts to Decimal
+    const totalAmountDecimal = new Prisma.Decimal(totalAmount);
+    const baseAmountDecimal = new Prisma.Decimal(baseAmount);
+    const totalFeeDecimal = new Prisma.Decimal(serviceFee + processingFee);
 
     // Get or create wallet
     let wallet = await prisma.wallet.findUnique({
@@ -71,9 +96,10 @@ export async function POST(req: NextRequest) {
         userId: session.user.id,
         walletId: wallet.id,
         type: "DEPOSIT",
-        amount: amountDecimal,
-        netAmount: amountDecimal,
-        description: `Wallet deposit of ₦${amount.toLocaleString()} via ${
+        amount: totalAmountDecimal,
+        fee: totalFeeDecimal,
+        netAmount: baseAmountDecimal,
+        description: `Wallet deposit of ₦${baseAmount.toLocaleString()} via ${
           method === "CARD" ? "Card" : "Bank Transfer"
         }`,
         status: "PENDING",
@@ -82,6 +108,11 @@ export async function POST(req: NextRequest) {
         processorTransactionId: reference,
         metadata: {
           paymentMethod: method,
+          baseAmount,
+          serviceFee,
+          expectedPlatformFee: serviceFee, // For tracking variance during webhook
+          processingFee,
+          totalAmount
         } as any,
       },
     });
@@ -90,7 +121,7 @@ export async function POST(req: NextRequest) {
       // Initialize Paystack payment for BOTH card and bank transfer
       const paymentResponse = await initializePayment({
         email: session.user.email,
-        amount: nairaToKobo(amount),
+        amount: nairaToKobo(totalAmount),
         reference,
         callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/wallet?payment=success`,
         metadata: {
@@ -108,8 +139,8 @@ export async function POST(req: NextRequest) {
         "deposit_initiated",
         `${
           method === "CARD" ? "Card" : "Bank transfer"
-        } deposit of ₦${amount.toLocaleString()} initiated`,
-        { amount, reference, method }
+        } deposit of ₦${baseAmount.toLocaleString()} initiated (Total: ₦${totalAmount.toLocaleString()})`,
+        { baseAmount, totalAmount, reference, method }
       );
 
       return NextResponse.json({

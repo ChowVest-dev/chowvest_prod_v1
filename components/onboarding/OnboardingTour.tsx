@@ -26,26 +26,25 @@ const STEPS: OnboardingStep[] = [
     id: "wallet-balance",
     path: "/dashboard",
     headline: "Your Wallet",
-    description: "This is your wallet. Fund it to start saving.",
+    description: "Your Chow Wallet. The first step to a full basket.",
   },
   {
     id: "deposit-button",
     path: "/wallet",
-    headline: "Deposit Funds",
-    description:
-      "Deposit via card or bank transfer, powered by Paystack.",
+    headline: "Quick Funding",
+    description: "Secure your food budget instantly via card or bank transfer.",
   },
   {
     id: "create-target-button",
     path: "/basket-goals",
-    headline: "Chow Targets",
-    description: "Create a Chow Target for a specific food item.",
+    headline: "Price Protection",
+    description: "Pick your essentials and lock in today's price.",
   },
   {
     id: "goal-progress-bar",
     path: "/basket-goals",
-    headline: "Track Progress",
-    description: "Top up anytime. Hit 100% and request delivery.",
+    headline: "Fill Your Basket",
+    description: "Hit 100% and we'll bring it home.",
   },
   {
     id: "market-grid",

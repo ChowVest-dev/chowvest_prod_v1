@@ -16,16 +16,24 @@ export default async function BasketGoalsPage() {
     redirect("/auth");
   }
 
-  const [baskets, wallet] = await Promise.all([
+  const [baskets, wallet, activeDeliveryCount] = await Promise.all([
     prisma.basket.findMany({
       where: {
         userId: session.user.id,
-        status: "ACTIVE",
+      },
+      include: {
+        deliveries: true,
       },
       orderBy: { createdAt: "desc" },
     }),
     prisma.wallet.findUnique({
       where: { userId: session.user.id },
+    }),
+    prisma.delivery.count({
+      where: {
+        userId: session.user.id,
+        status: { in: ["PENDING", "CONFIRMED", "PREPARING", "IN_TRANSIT"] },
+      },
     }),
   ]);
 
@@ -42,6 +50,14 @@ export default async function BasketGoalsPage() {
     category: basket.category,
     status: basket.status,
     createdAt: basket.createdAt.toISOString(),
+    deliveries: basket.deliveries.map(d => ({
+      ...d,
+      deliveryFee: Number(d.deliveryFee),
+      serviceFee: Number(d.serviceFee),
+      createdAt: d.createdAt.toISOString(),
+      updatedAt: d.updatedAt.toISOString(),
+      estimatedAt: d.estimatedAt?.toISOString() || null,
+    })),
   }));
 
   const walletBalance = Number(wallet?.balance || 0);
@@ -53,6 +69,7 @@ export default async function BasketGoalsPage() {
         <BasketGoalsClientWrapper
           serializedBaskets={serializedBaskets}
           walletBalance={walletBalance}
+          initialActiveDeliveriesCount={activeDeliveryCount}
         />
       </Suspense>
     </>

@@ -13,11 +13,16 @@ export interface InteractiveMenuItem {
 export interface InteractiveMenuProps {
   items: InteractiveMenuItem[];
   accentColor?: string;
+  activeDeliveryCount?: number;
 }
 
 const defaultAccentColor = 'var(--component-active-color-default)';
 
-const InteractiveMenu: React.FC<InteractiveMenuProps> = ({ items, accentColor }) => {
+const InteractiveMenu: React.FC<InteractiveMenuProps> = ({ 
+  items, 
+  accentColor,
+  activeDeliveryCount = 0
+}) => {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -95,6 +100,15 @@ const InteractiveMenu: React.FC<InteractiveMenuProps> = ({ items, accentColor })
               
               <div className={`relative p-2 rounded-2xl mb-1 transition-colors duration-300 menu__icon ${isActive ? 'text-primary-foreground bg-[var(--component-active-color)]' : 'text-[var(--component-inactive-color)] hover:bg-[var(--component-active-bg)]/50 hover:text-foreground'}`}>
                 <IconComponent className={`w-[22px] h-[22px] transition-transform duration-300 icon ${isActive ? 'animate-[iconBounce_0.5s_ease-in-out]' : ''}`} strokeWidth={isActive ? 2.5 : 2} />
+                
+                {item.href === "/basket-goals" && activeDeliveryCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 border-2 border-[var(--component-bg)] flex items-center justify-center text-[8px] text-white font-black">
+                      {activeDeliveryCount}
+                    </span>
+                  </span>
+                )}
               </div>
               <strong
                 className={`text-[11px] leading-tight font-medium transition-all duration-300 overflow-visible whitespace-nowrap menu__text ${isTextActive ? 'text-[var(--component-active-color)] opacity-100 translate-y-0 active' : 'text-[var(--component-inactive-color)] opacity-70 translate-y-[2px]'}`}

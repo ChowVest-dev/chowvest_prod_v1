@@ -119,21 +119,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    const amount = koboToNaira(amountKobo);
-    const fee = koboToNaira(fees ?? 0);
-    const netAmount = amount - fee;
+    const actualPaystackFee = koboToNaira(fees ?? 0);
+    const totalAmountCharged = koboToNaira(amountKobo);
+    const amountToCredit = transaction.netAmount; // This is the base amount
 
-    const amountDecimal = new Prisma.Decimal(amount);
-    const feeDecimal = new Prisma.Decimal(fee);
-    const netAmountDecimal = new Prisma.Decimal(netAmount);
+    // Calculate variance
+    const metadata = (transaction.metadata as any) || {};
+    const expectedPlatformFee = metadata.expectedPlatformFee || 0;
+    
+    // actualPlatformFee = amount we got from Paystack - amount we credit to user
+    const amountRemitted = totalAmountCharged - actualPaystackFee;
+    const actualPlatformFee = amountRemitted - amountToCredit.toNumber();
+    const variance = actualPlatformFee - expectedPlatformFee;
+    
+    // Append tracking to metadata
+    const updatedMetadata = {
+      ...metadata,
+      actualPlatformFee,
+      variance,
+      paystackFee: actualPaystackFee,
+    };
 
     // Credit the wallet atomically
     const result = await prisma.$transaction(async (tx) => {
       const updatedWallet = await tx.wallet.update({
         where: { id: transaction.walletId },
         data: {
-          balance: { increment: netAmountDecimal },
-          totalDeposits: { increment: amountDecimal },
+          balance: { increment: amountToCredit },
+          totalDeposits: { increment: amountToCredit },
         },
       });
 
@@ -141,13 +154,12 @@ export async function POST(req: NextRequest) {
         where: { id: transaction.id },
         data: {
           status: "COMPLETED",
-          amount: amountDecimal,
-          fee: feeDecimal,
-          netAmount: netAmountDecimal,
+          // We intentionally do not overwrite amount, fee, and netAmount. They correctly reflect what was promised.
           balanceAfter: updatedWallet.balance,
           completedAt: new Date(),
-          processorFee: feeDecimal,
+          processorFee: new Prisma.Decimal(actualPaystackFee),
           processorResponse: event.data,
+          metadata: updatedMetadata,
         },
       });
 
@@ -157,11 +169,14 @@ export async function POST(req: NextRequest) {
     await logFinancialAction(
       transaction.userId,
       "deposit_completed",
-      `Deposit of ₦${amountDecimal.toFixed(2)} completed via Paystack webhook`,
+      `Deposit of ₦${amountToCredit.toFixed(2)} completed via Paystack webhook`,
       {
-        amount: amountDecimal.toString(),
-        fee: feeDecimal.toString(),
-        netAmount: netAmountDecimal.toString(),
+        baseAmount: amountToCredit.toString(),
+        totalCharged: totalAmountCharged.toString(),
+        paystackFee: actualPaystackFee.toString(),
+        platformFeeReceived: actualPlatformFee.toString(),
+        expectedPlatformFee: expectedPlatformFee.toString(),
+        variance: variance.toString(),
         reference,
         newBalance: result.wallet.balance.toString(),
         source: "webhook",
@@ -171,11 +186,11 @@ export async function POST(req: NextRequest) {
     await sendTransactionNotification(
       transaction.userId,
       "DEPOSIT",
-      netAmountDecimal.toNumber(),
+      amountToCredit.toNumber(),
       "COMPLETED"
     );
 
-    console.log(`Paystack webhook: credited ₦${netAmount} to wallet ${transaction.walletId}`);
+    console.log(`Paystack webhook: credited ₦${amountToCredit.toString()} to wallet ${transaction.walletId} (Variance: ₦${variance.toFixed(2)})`);
     return NextResponse.json({ received: true });
   } catch (error: any) {
     console.error("Paystack webhook error:", error);

@@ -14,10 +14,10 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
     <div className="flex items-center justify-between">
       <div>
         <h1 className="text-3xl md:text-4xl font-bold text-foreground text-balance">
-          Welcome back {user.fullName}
+          Good to see you, {user.fullName}!
         </h1>
         <p className="text-muted-foreground mt-1">
-          Turn your savings into guaranteed food on your table, every season.
+          Secure your kitchen's future with every top-up.
         </p>
       </div>
       <Button

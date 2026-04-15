@@ -21,3 +21,4 @@ export { WalletSkeleton } from "./wallet-skeleton";
 export { MarketSkeleton } from "./market-skeleton";
 export { ProfileSkeleton } from "./profile-skeleton";
 export { BasketGoalsSkeleton } from "./basket-goals-skeleton";
+export { DeliveriesSkeleton } from "./deliveries-skeleton";

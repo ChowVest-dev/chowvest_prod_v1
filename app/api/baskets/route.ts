@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const [baskets, wallet] = await Promise.all([
+    const [baskets, wallet, activeDeliveriesCount] = await Promise.all([
       prisma.basket.findMany({
         where: { userId: session.user.id },
         orderBy: { createdAt: "desc" },
@@ -26,6 +26,12 @@ export async function GET(req: NextRequest) {
       }),
       prisma.wallet.findUnique({
         where: { userId: session.user.id },
+      }),
+      prisma.delivery.count({
+        where: {
+          userId: session.user.id,
+          status: { in: ["PENDING", "CONFIRMED", "PREPARING", "IN_TRANSIT"] },
+        },
       }),
     ]);
 
@@ -41,6 +47,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       baskets: basketsWithStrings,
       walletBalance: Number(wallet?.balance || 0),
+      activeDeliveriesCount,
     });
   } catch (error: any) {
     console.error("Get baskets error:", error);
