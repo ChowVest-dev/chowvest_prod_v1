@@ -4,7 +4,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
-import { useDebounce } from "@/hooks/use-debounce"; // We will create this or inline it
 
 export function SearchBar({ placeholder = "Search..." }: { placeholder?: string }) {
   const router = useRouter();
