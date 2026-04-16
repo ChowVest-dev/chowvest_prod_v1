@@ -51,6 +51,7 @@ export function ActiveDeliveryTracker({ deliveries }: ActiveDeliveryTrackerProps
                   src={delivery.image || "/rice.jpg"}
                   alt={delivery.commodityName}
                   fill
+                  sizes="(max-width: 768px) 64px, 80px"
                   className="object-cover"
                 />
               </div>
