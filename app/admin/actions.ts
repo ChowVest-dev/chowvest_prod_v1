@@ -15,6 +15,14 @@ export async function loginAdmin(prevState: any, formData: FormData) {
   }
 
   try {
+    const existingUser = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
+
+    if (existingUser) {
+      return { error: "Access Denied: Customer accounts cannot log in here. Please use a dedicated staff email." };
+    }
+
     let admin = await prisma.admin.findUnique({
       where: { email: email.toLowerCase() },
     });
