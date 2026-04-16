@@ -191,8 +191,9 @@ model Transaction {
   processorFee           Decimal? @db.Decimal(15, 2)
   processorResponse      Json? // Full response from processor
 
-  // Metadata
-  metadata Json? // Additional transaction data
+  // Metadata & Flags
+  isFlagged Boolean @default(false)
+  metadata  Json?   // Additional transaction data
 
   // Timestamps
   initiatedAt DateTime  @default(now())
@@ -629,4 +630,48 @@ model ProcessedWebhook {
   @@index([reference])
   @@index([processedAt])
   @@map("processed_webhooks")
+}
+
+// ============================================
+// ADMIN ACCOUNTS
+// ============================================
+
+model Admin {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  fullName      String
+  role          String    @default("ADMIN") // e.g., "SUPER_ADMIN", "ADMIN"
+  
+  // Verification & Status
+  emailVerified DateTime?
+  isActive      Boolean   @default(true)
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions      AdminSession[]
+
+  @@index([email])
+  @@index([role])
+  @@map("admins")
+}
+
+model AdminSession {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  adminId      String
+  expires      DateTime
+
+  ipAddress String?
+  userAgent String?
+
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+
+  admin Admin @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([expires])
+  @@map("admin_sessions")
 }

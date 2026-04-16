@@ -241,7 +241,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
             <Plus className="w-5 h-5 text-primary" />
           </div>
           <h3 className="text-xl font-semibold text-foreground">
-            Beat food inflation now
+            Create a Basket
           </h3>
         </div>
 
@@ -251,7 +251,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
 
         <Button className="w-full">
           <Plus className="w-4 h-4 mr-2" />
-          Build Your Basket
+          Get Started
         </Button>
 
         <div className="mt-6 p-4 rounded-lg bg-accent/30">

@@ -41,11 +41,9 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect authenticated users from auth routes to dashboard
-  if (isAuthRoute && isAuthenticated) {
-    const url = new URL("/dashboard", req.url);
-    return NextResponse.redirect(url);
-  }
+  // We intentionally skip redirecting from "/auth" to "/dashboard" here 
+  // because Edge middleware cannot consult the Postgres DB to check if the session is revoked/suspended.
+  // This prevents infinite redirect loops. That validation is now natively handled by the Auth Client.
 
   return NextResponse.next();
 }

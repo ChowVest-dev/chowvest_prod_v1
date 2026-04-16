@@ -43,9 +43,12 @@ export async function getSession(): Promise<SessionResult | null> {
             location: true,
             createdAt: true,
             hasCompletedOnboarding: true,
+            accountStatus: true,
+            sessions: { select: { id: true }, take: 1 }
           },
         });
-        if (user) {
+        // Enforce suspension and force logout immediately
+        if (user && user.accountStatus === "active" && user.sessions.length > 0) {
           return {
             userId: user.id,
             user: {
@@ -74,12 +77,13 @@ export async function getSession(): Promise<SessionResult | null> {
               location: true,
               createdAt: true,
               hasCompletedOnboarding: true,
+              accountStatus: true,
             },
           },
         },
       });
 
-      if (session && session.expires > new Date()) {
+      if (session && session.expires > new Date() && session.user.accountStatus === "active") {
         return {
           userId: session.userId,
           user: {
