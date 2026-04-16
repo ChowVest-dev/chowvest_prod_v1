@@ -41,6 +41,8 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
     else if (baseAmount >= 10000) serviceFee = 200;
     else serviceFee = 100;
   }
+
+ 
   
   const subtotal = baseAmount + serviceFee;
   let processingFee = 0;
@@ -56,6 +58,7 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
   }
   
   const totalAmount = subtotal + processingFee;
+  const platformFee = serviceFee + processingFee;
 
   const handlePayment = async (method: "CARD" | "BANK_TRANSFER") => {
     if (!amount || parseFloat(amount) <= 0) {
@@ -225,13 +228,14 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
                     <span>Deposit Amount:</span>
                     <span className="font-medium text-foreground">₦{baseAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
-                  <div className="flex justify-between text-muted-foreground">
+                  {/*<div className="flex justify-between text-muted-foreground">
                     <span>Service Fee:</span>
                     <span className="font-medium text-foreground">₦{serviceFee.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  </div>
+                  </div> 
+                  */}
                   <div className="flex justify-between text-muted-foreground">
                     <span>Processing Fee:</span>
-                    <span className="font-medium text-foreground">₦{processingFee.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span className="font-medium text-foreground">₦{platformFee.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                   <div className="pt-3 flex justify-between border-t font-medium">
                     <span>Total</span>

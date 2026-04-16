@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
     const baseAmount = amount;
     
     let serviceFee = 100;
+    
     if (baseAmount >= 100000) serviceFee = 500;
     else if (baseAmount >= 50000) serviceFee = 350;
     else if (baseAmount >= 10000) serviceFee = 200;
