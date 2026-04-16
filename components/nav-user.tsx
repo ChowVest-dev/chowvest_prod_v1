@@ -102,7 +102,9 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {
+              import("@/app/admin/actions").then(m => m.logoutAdmin());
+            }}>
               <LogOut />
               Log out
             </DropdownMenuItem>
