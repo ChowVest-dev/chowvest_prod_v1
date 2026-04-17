@@ -50,27 +50,11 @@ export async function POST(req: NextRequest) {
 
     // Calculate fees
     const baseAmount = amount;
+    const serviceFee = 0;
     
-    let serviceFee = 100;
-    
-    if (baseAmount >= 100000) serviceFee = 500;
-    else if (baseAmount >= 50000) serviceFee = 350;
-    else if (baseAmount >= 10000) serviceFee = 200;
-    else serviceFee = 100;
-
-    const subtotal = baseAmount + serviceFee;
-    
-    let processingFee = 0;
-    if (method === "BANK_TRANSFER") {
-      processingFee = subtotal * 0.01; // 1% per transfer
-      if (processingFee > 300) processingFee = 300; // capped at N300
-    } else {
-      // Paystack fee: 1.5% + N100 (N100 waived under N2500, capped at N2000)
-      processingFee = (subtotal * 0.015) + (subtotal < 2500 ? 0 : 100);
-      if (processingFee > 2000) processingFee = 2000;
-    }
-    
-    const totalAmount = subtotal + processingFee;
+    const flatFee = baseAmount < 2500 ? 0 : 100;
+    const totalAmount = (baseAmount + flatFee) / 0.985;
+    const processingFee = totalAmount - baseAmount;
 
     // Convert amounts to Decimal
     const totalAmountDecimal = new Prisma.Decimal(totalAmount);
