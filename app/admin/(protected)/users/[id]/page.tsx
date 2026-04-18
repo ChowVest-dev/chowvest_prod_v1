@@ -173,8 +173,8 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                     {transactions.map((tx) => (
                       <tr key={tx.id}>
                         <td className="px-4 py-3 font-semibold">{tx.type}</td>
-                        <td className={`px-4 py-3 font-mono font-bold ${tx.type === "DEPOSIT" ? "text-green-600" : "text-red-500"}`}>
-                          {tx.type === "DEPOSIT" ? "+" : "-"}₦{Number(tx.amount).toLocaleString()}
+                        <td className={`px-4 py-3 font-mono font-bold ${["DEPOSIT", "CREDIT_USER"].includes(tx.type) ? "text-green-600" : "text-red-500"}`}>
+                          {["DEPOSIT", "CREDIT_USER"].includes(tx.type) ? "+" : "-"}₦{Number(tx.amount).toLocaleString()}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground truncate max-w-[200px]">{tx.description}</td>
                         <td className="px-4 py-3">

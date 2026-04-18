@@ -1,52 +1,47 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ArrowLeft, Phone, MessageSquare, RefreshCw, Star } from "lucide-react";
+import Link from "next/link";
 
 interface LiveTrackingProps {
   delivery: any;
   onDeliveryComplete: () => void;
 }
 
-type StepKey = "ORDER_READY" | "RIDER_AT_VENDOR" | "IN_TRANSIT" | "ORDER_ARRIVED" | "DELIVERED";
+type StepKey = "PENDING" | "CONFIRMED" | "PREPARING" | "IN_TRANSIT" | "DELIVERED";
 
 interface TrackingStep {
   key: StepKey;
   label: string;
   description: string;
-  delay: number; // ms from start
 }
 
 const STEPS: TrackingStep[] = [
   {
-    key: "ORDER_READY",
-    label: "Order Ready",
-    description: "Your order is ready for pickup.",
-    delay: 0,
+    key: "PENDING",
+    label: "Order Received",
+    description: "Your order has been received.",
   },
   {
-    key: "RIDER_AT_VENDOR",
-    label: "Rider At The Vendor",
-    description: "Your rider has arrived at the vendor to pick up your order.",
-    delay: 45000,
+    key: "CONFIRMED",
+    label: "Order Confirmed",
+    description: "Your order is confirmed and ready to be prepared.",
+  },
+  {
+    key: "PREPARING",
+    label: "Preparing Your Order",
+    description: "The vendor is preparing your order.",
   },
   {
     key: "IN_TRANSIT",
     label: "Order In Transit",
     description: "Your order is on its way.",
-    delay: 90000,
-  },
-  {
-    key: "ORDER_ARRIVED",
-    label: "Order Arrived",
-    description: "Your driver is around to deliver your order.",
-    delay: 135000,
   },
   {
     key: "DELIVERED",
     label: "Order Delivered",
     description: "Enjoy your meal, don't forget to rate your meal.",
-    delay: 180000,
   },
 ];
 
@@ -55,37 +50,64 @@ function formatTime(date: Date) {
 }
 
 export function LiveTracking({ delivery, onDeliveryComplete }: LiveTrackingProps) {
-  const [completedSteps, setCompletedSteps] = useState<Set<StepKey>>(new Set(["ORDER_READY"]));
-  const [stepTimes, setStepTimes] = useState<Partial<Record<StepKey, Date>>>({
-    ORDER_READY: new Date(),
-  });
+  const [completedSteps, setCompletedSteps] = useState<Set<StepKey>>(new Set(["PENDING"]));
+  const [stepTimes, setStepTimes] = useState<Partial<Record<StepKey, Date>>>({});
+  const completeTriggeredRef = useRef(false);
 
   const totalMinutes = delivery?.deliveryOption === "EXPRESS" ? 18 : 25;
 
   useEffect(() => {
-    const timers: ReturnType<typeof setTimeout>[] = [];
+    if (!delivery?.id) return;
 
-    STEPS.slice(1).forEach((step) => {
-      const t = setTimeout(() => {
-        setCompletedSteps((prev) => new Set([...prev, step.key]));
-        setStepTimes((prev) => ({ ...prev, [step.key]: new Date() }));
+    const eventSource = new EventSource(`/api/delivery/status?deliveryId=${delivery.id}`);
 
-        if (step.key === "DELIVERED") {
-          // Update delivery status in DB
-          if (delivery?.id) {
-            fetch("/api/delivery/status", {
-              method: "POST",
-              body: JSON.stringify({ deliveryId: delivery.id, status: "DELIVERED" }),
-            }).catch(console.error);
-          }
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        
+        const newCompleted = new Set<StepKey>();
+        const newTimes: Partial<Record<StepKey, Date>> = {};
+
+        if (data.requestedAt) {
+          newCompleted.add("PENDING");
+          newTimes.PENDING = new Date(data.requestedAt);
+        }
+        if (data.confirmedAt) {
+          newCompleted.add("CONFIRMED");
+          newTimes.CONFIRMED = new Date(data.confirmedAt);
+        }
+        if (data.preparingAt) {
+          newCompleted.add("PREPARING");
+          newTimes.PREPARING = new Date(data.preparingAt);
+        }
+        if (data.dispatchedAt) {
+          newCompleted.add("IN_TRANSIT");
+          newTimes.IN_TRANSIT = new Date(data.dispatchedAt);
+        }
+        if (data.deliveredAt) {
+          newCompleted.add("DELIVERED");
+          newTimes.DELIVERED = new Date(data.deliveredAt);
+        }
+
+        setCompletedSteps(newCompleted);
+        setStepTimes(newTimes);
+
+        if (data.status === "DELIVERED" && !completeTriggeredRef.current) {
+          completeTriggeredRef.current = true;
           setTimeout(() => onDeliveryComplete(), 1500);
         }
-      }, step.delay);
+      } catch (error) {
+        console.error("Failed to parse SSE data", error);
+      }
+    };
 
-      timers.push(t);
-    });
+    eventSource.onerror = (error) => {
+      console.error("SSE Error:", error);
+    };
 
-    return () => timers.forEach(clearTimeout);
+    return () => {
+      eventSource.close();
+    };
   }, [delivery?.id, onDeliveryComplete]);
 
   const orderId = delivery?.id
@@ -96,7 +118,7 @@ export function LiveTracking({ delivery, onDeliveryComplete }: LiveTrackingProps
     <div className="min-h-full bg-background flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border">
-        <div className="flex items-center gap-3">
+        <Link href="/dashboard" className="flex items-center gap-3">
           <button
             className="w-9 h-9 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
             onClick={() => {/* no-op during active delivery */}}
@@ -104,7 +126,7 @@ export function LiveTracking({ delivery, onDeliveryComplete }: LiveTrackingProps
             <ArrowLeft className="w-4 h-4 text-foreground" />
           </button>
           <h1 className="text-lg font-bold text-foreground">Order #{orderId}</h1>
-        </div>
+        </Link>
         <button className="flex items-center gap-1.5 text-[13px] text-primary font-semibold">
           <RefreshCw className="w-3.5 h-3.5" />
           Repeat order

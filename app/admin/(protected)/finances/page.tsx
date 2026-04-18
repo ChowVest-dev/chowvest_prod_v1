@@ -60,7 +60,9 @@ export default async function AdminFinancesPage({ searchParams }: { searchParams
                     <ArrowUpRight className="w-4 h-4 text-red-500" />
                   )}
                   <div className="flex flex-col gap-0.5">
-                    <span className="font-semibold">{tx.type}</span>
+                    <span className="font-semibold">
+                      {tx.type === "FEE" ? "DELIVERY FEE" : tx.type.replace(/_/g, ' ')}
+                    </span>
                     <span className="text-xs font-mono text-muted-foreground">ID: {tx.id.split("-").pop() || tx.id.slice(0, 8)}</span>
                     {tx.processorTransactionId && (
                       <span className="text-[10px] text-muted-foreground font-mono">EXT: {tx.processorTransactionId}</span>
@@ -75,11 +77,17 @@ export default async function AdminFinancesPage({ searchParams }: { searchParams
                 <div className="text-xs text-muted-foreground">{tx.user?.email || "Unknown"}</div>
               </td>
               <td className="px-6 py-4 font-mono font-medium">
-                ₦{Number(tx.amount).toLocaleString()}
+                {["FEE", "DELIVERY_FEE"].includes(tx.type) && !tx.fee
+                  ? `₦${(Number(tx.amount) - 100).toLocaleString()}`
+                  : `₦${Number(tx.amount).toLocaleString()}`}
               </td>
               <td className="px-6 py-4 font-mono text-muted-foreground">
                 <div className="flex flex-col gap-1">
-                  <span>₦{Number(tx.fee || 0).toLocaleString()}</span>
+                  <span>
+                    ₦{["FEE", "DELIVERY_FEE"].includes(tx.type) && !tx.fee
+                      ? "100"
+                      : Number(tx.fee || 0).toLocaleString()}
+                  </span>
                   <span className="text-[10px] uppercase font-semibold text-primary/70">
                     {(tx.metadata as any)?.feeType || (tx.type === "DEPOSIT" ? "Processing Fee" : "Service Fee")}
                   </span>
@@ -90,7 +98,10 @@ export default async function AdminFinancesPage({ searchParams }: { searchParams
               </td>
               <td className="px-6 py-4 font-mono font-bold text-right">
                 {(() => {
-                   const variance = Number(tx.fee || 0) - Number(tx.processorFee || 0);
+                   let feeVal = Number(tx.fee || 0);
+                   if (["FEE", "DELIVERY_FEE"].includes(tx.type) && !tx.fee) feeVal = 100;
+
+                   const variance = feeVal - Number(tx.processorFee || 0);
                    if (variance > 0) return <span className="text-green-600">+₦{variance.toLocaleString()}</span>;
                    if (variance < 0) return <span className="text-red-500">-₦{Math.abs(variance).toLocaleString()}</span>;
                    return <span className="text-muted-foreground">₦0</span>;
