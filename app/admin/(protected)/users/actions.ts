@@ -56,10 +56,10 @@ export async function creditUserWallet(userId: string, amount: number) {
       data: {
         userId,
         walletId: wallet.id,
-        type: "DEPOSIT",
+        type: "CREDIT_USER",
         amount,
-        netAmount: amount, // Assuming no s for admin direct credit
-        description: "Admin manual credit",
+        netAmount: amount, // Assuming no fees for admin direct credit
+        description: "Admin manual credit / Refund",
         status: "COMPLETED",
         balanceBefore: wallet.balance,
         balanceAfter: Number(wallet.balance) + amount,
