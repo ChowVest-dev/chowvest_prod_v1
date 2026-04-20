@@ -677,3 +677,16 @@ model AdminSession {
   @@index([expires])
   @@map("admin_sessions")
 }
+
+// ============================================
+// PLATFORM CONFIG (editable admin settings)
+// ============================================
+
+model PlatformConfig {
+  key       String   @id // e.g. "DELIVERY_FEE_EXPRESS", "SERVICE_FEE"
+  value     String        // stored as string, cast to number at runtime
+  label     String        // Human readable label shown in admin UI
+  updatedAt DateTime @updatedAt
+
+  @@map("platform_config")
+}
