@@ -12,6 +12,8 @@ import {
   PieChart,
   Settings2,
   SquareTerminal,
+  ShoppingBasket,
+  Store,
 } from "lucide-react"
 
 import { NavUser } from "@/components/nav-user"
@@ -38,6 +40,11 @@ const navigationItems = [
     icon: Bot,
   },
   {
+    title: "Goals",
+    url: "/admin/goals",
+    icon: ShoppingBasket,
+  },
+  {
     title: "Deliveries",
     url: "/admin/deliveries",
     icon: Map,
@@ -48,11 +55,17 @@ const navigationItems = [
     icon: GalleryVerticalEnd,
   },
   {
+    title: "Market",
+    url: "/admin/market",
+    icon: Store,
+  },
+  {
     title: "Settings",
     url: "/admin/settings",
     icon: Settings2,
   },
 ]
+
 
 export function AppSidebar({ admin, ...props }: React.ComponentProps<typeof Sidebar> & { admin?: any }) {
   const adminUser = {
