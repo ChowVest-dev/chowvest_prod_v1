@@ -163,16 +163,23 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
       toast.error("Quantity must be between 1 and 10");
       return;
     }
+    
+    if (!goalData.targetDate) {
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + 90);
+      setGoalData(prev => ({
+        ...prev,
+        targetDate: targetDate.toISOString().split("T")[0],
+      }));
+    }
     setCurrentStep("date");
   };
 
   const handleDateSelect = () => {
-    const targetDate = new Date();
-    targetDate.setDate(targetDate.getDate() + 90);
-    setGoalData({
-      ...goalData,
-      targetDate: targetDate.toISOString().split("T")[0],
-    });
+    if (!goalData.targetDate) {
+      toast.error("Please select a target date");
+      return;
+    }
     setCurrentStep("review");
   };
 
@@ -526,7 +533,14 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
             )}
 
             {/* Step 4: Target Date Selection */}
-            {currentStep === "date" && (
+            {currentStep === "date" && (() => {
+              const today = new Date();
+              const todayStr = today.toISOString().split("T")[0];
+              const maxDate = new Date();
+              maxDate.setDate(today.getDate() + 90);
+              const maxDateStr = maxDate.toISOString().split("T")[0];
+
+              return (
               <div className="space-y-4">
                 <Button
                   variant="ghost"
@@ -539,9 +553,21 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                 </Button>
                 <div className="max-w-md mx-auto space-y-6">
                   <div className="p-6 bg-primary/10 rounded-xl border border-primary/20">
-                    <p className="text-center text-foreground font-medium leading-relaxed text-[15px]">
-                      Secure the best price. Don't let rising food costs surprise you later.
+                    <p className="text-center text-foreground font-medium leading-relaxed text-[15px] mb-4">
+                      We lock in today's price for you for up to 90 days. This protects your savings against inflation and ensures rising food costs won't surprise you later.
                     </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="target-date">Select Target Date (Max 90 Days)</Label>
+                      <Input
+                        id="target-date"
+                        type="date"
+                        min={todayStr}
+                        max={maxDateStr}
+                        value={goalData.targetDate}
+                        onChange={(e) => setGoalData({ ...goalData, targetDate: e.target.value })}
+                        className="w-full h-12"
+                      />
+                    </div>
                   </div>
                   <Button
                     className="w-full"
@@ -552,7 +578,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                   </Button>
                 </div>
               </div>
-            )}
+            )})()}
 
             {/* Step 5: Review & Confirm */}
             {currentStep === "review" && goalData.selectedCommodity && (
