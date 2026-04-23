@@ -71,7 +71,7 @@ export default async function AdminFinancesPage({ searchParams }: { searchParams
                   )}
                   <div className="flex flex-col gap-0.5">
                     <span className="font-semibold">
-                      {tx.type === "FEE" ? "DELIVERY FEE" : tx.type.replace(/_/g, ' ')}
+                      {tx.type === "DELIVERY_FEE" ? "DELIVERY FEE" : tx.type.replace(/_/g, ' ')}
                     </span>
                     <span className="text-xs font-mono text-muted-foreground">ID: {tx.id.split("-").pop() || tx.id.slice(0, 8)}</span>
                     {tx.processorTransactionId && (
