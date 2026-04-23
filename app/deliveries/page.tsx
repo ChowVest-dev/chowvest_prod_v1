@@ -4,7 +4,7 @@ import prisma from "@/lib/db";
 import { Navigation } from "@/components/navigation";
 import { DeliveriesWrapper } from "@/components/delivery/deliveries-wrapper";
 import { DeliveriesHeader } from "@/components/delivery/deliveries-header";
-import { COMMODITIES } from "@/constants/commodities";
+
 
 export const metadata = {
   title: "My Deliveries | Chowvest",
@@ -54,17 +54,8 @@ export default async function DeliveriesPage() {
 
   // Transform and serialize the payload safely
   const serializedDeliveries = deliveries.map(d => {
-    // Attempt to map image via COMMODITIES constant if db doesn't have it directly on basket
-    let imageSrc = d.basket?.image;
-    let commodityName = d.basket?.name;
-    
-    if (d.basket?.commodityType) {
-      const comm = COMMODITIES.find(c => c.sku === d.basket?.commodityType);
-      if (comm) {
-        if (!imageSrc) imageSrc = comm.image;
-        commodityName = comm.name;
-      }
-    }
+    const imageSrc = d.basket?.image || "/rice.jpg";
+    const commodityName = d.basket?.name || "Food Items";
 
     return {
       id: d.id,
@@ -73,8 +64,8 @@ export default async function DeliveriesPage() {
       createdAt: d.createdAt.toISOString(),
       deliveredAt: d.deliveredAt ? d.deliveredAt.toISOString() : null,
       basketId: d.basketId,
-      commodityName: commodityName || "Food Items",
-      image: imageSrc || "/rice.jpg",
+      commodityName: commodityName,
+      image: imageSrc,
       amount: d.basket?.goalAmount ? Number(d.basket.goalAmount) : 0,
       riderName: d.riderName,
     };
@@ -93,19 +84,12 @@ export default async function DeliveriesPage() {
   });
 
   const readyBaskets = readyBasketsRaw.map(b => {
-    let imageSrc = b.image;
-    let commodityName = b.name;
-    if (b.commodityType) {
-      const comm = COMMODITIES.find(c => c.sku === b.commodityType);
-      if (comm) {
-        if (!imageSrc) imageSrc = comm.image;
-        commodityName = `${comm.name}`;
-      }
-    }
+    const imageSrc = b.image || "/rice.jpg";
+    const commodityName = b.name || "Food Items";
     return {
       id: b.id,
       name: commodityName,
-      image: imageSrc || "/rice.jpg",
+      image: imageSrc,
       goalAmount: Number(b.goalAmount),
     };
   });

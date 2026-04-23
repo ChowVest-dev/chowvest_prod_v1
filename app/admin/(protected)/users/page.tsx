@@ -10,18 +10,29 @@ import { SearchBar } from "@/components/admin/search-bar";
 export default async function AdminUsersPage({ searchParams }: { searchParams: Promise<{ q?: string, tab?: string }> }) {
   const query = (await searchParams).q || "";
   const tab = (await searchParams).tab || "all";
+  
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
     where: {
-      ...(query ? {
-        OR: [
-          { email: { contains: query, mode: "insensitive" } },
-          { fullName: { contains: query, mode: "insensitive" } },
-          { phoneNumber: { contains: query, mode: "insensitive" } }
-        ]
-      } : {}),
-      ...(tab === "active" ? { accountStatus: "active" } : {})
+      AND: [
+        query ? {
+          OR: [
+            { email: { contains: query, mode: "insensitive" } },
+            { fullName: { contains: query, mode: "insensitive" } },
+            { phoneNumber: { contains: query, mode: "insensitive" } }
+          ]
+        } : {},
+        tab === "active" ? {
+          accountStatus: "active",
+          OR: [
+            { sessions: { some: { createdAt: { gte: thirtyDaysAgo } } } },
+            { transactions: { some: { createdAt: { gte: thirtyDaysAgo } } } },
+            { baskets: { some: { updatedAt: { gte: thirtyDaysAgo } } } }
+          ]
+        } : {}
+      ]
     },
     include: {
       wallet: { select: { balance: true } }
