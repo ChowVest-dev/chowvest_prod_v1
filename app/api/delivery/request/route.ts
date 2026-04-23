@@ -178,18 +178,36 @@ export async function POST(req: NextRequest) {
         data: { balance: { decrement: totalFee } }
       });
 
-      // Create fee transaction log
+      // 1. Create delivery fee transaction log
+      const balanceAfterDelivery = wallet.balance.sub(deliveryFee);
       await tx.transaction.create({
         data: {
           userId: session.user.id,
           walletId: wallet.id,
           basketId: basket.id,
-          type: "FEE",
-          amount: totalFee,
-          netAmount: totalFee,
-          description: `Delivery and Service Fee for ${basket.name}`,
+          type: "DELIVERY_FEE",
+          amount: deliveryFee,
+          netAmount: deliveryFee,
+          description: `Delivery Fee for ${basket.name}`,
           status: "COMPLETED",
           balanceBefore: wallet.balance,
+          balanceAfter: balanceAfterDelivery,
+          completedAt: now,
+        }
+      });
+
+      // 2. Create service fee transaction log
+      await tx.transaction.create({
+        data: {
+          userId: session.user.id,
+          walletId: wallet.id,
+          basketId: basket.id,
+          type: "SERVICE_FEE",
+          amount: SERVICE_FEE,
+          netAmount: SERVICE_FEE,
+          description: `Platform Service Fee for ${basket.name}`,
+          status: "COMPLETED",
+          balanceBefore: balanceAfterDelivery,
           balanceAfter: updatedWallet.balance,
           completedAt: now,
         }
