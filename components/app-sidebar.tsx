@@ -1,20 +1,24 @@
 "use client"
 
 import * as React from "react"
+import { usePathname } from "next/navigation"
 import {
-  AudioWaveform,
-  BookOpen,
   Bot,
-  Command,
-  Frame,
+  ChevronRight,
   GalleryVerticalEnd,
   Map,
   PieChart,
   Settings2,
-  SquareTerminal,
   ShoppingBasket,
   Store,
+  ShoppingCart,
+  Sprout,
 } from "lucide-react"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 
 import { NavUser } from "@/components/nav-user"
 import {
@@ -25,10 +29,17 @@ import {
   SidebarRail,
   SidebarMenu,
   SidebarMenuItem,
-  SidebarMenuButton
+  SidebarMenuButton,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from "@/components/ui/sidebar"
 
-const navigationItems = [
+type NavItem =
+  | { title: string; url: string; icon: React.ElementType; items?: never }
+  | { title: string; url?: string; icon: React.ElementType; items: { title: string; url: string }[] }
+
+const navigationItems: NavItem[] = [
   {
     title: "Overview",
     url: "/admin",
@@ -56,8 +67,11 @@ const navigationItems = [
   },
   {
     title: "Market",
-    url: "/admin/market",
     icon: Store,
+    items: [
+      { title: "Savings",     url: "/admin/market/savings" },
+      { title: "Marketplace", url: "/admin/market/marketplace" },
+    ],
   },
   {
     title: "Settings",
@@ -68,6 +82,7 @@ const navigationItems = [
 
 
 export function AppSidebar({ admin, ...props }: React.ComponentProps<typeof Sidebar> & { admin?: any }) {
+  const pathname = usePathname()
   const adminUser = {
     name: admin?.name || "Admin",
     email: admin?.email || "admin@chowvest.com",
@@ -86,16 +101,50 @@ export function AppSidebar({ admin, ...props }: React.ComponentProps<typeof Side
       </SidebarHeader>
       <SidebarContent className="px-2 mt-4 space-y-1">
         <SidebarMenu>
-          {navigationItems.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild tooltip={item.title}>
-                <a href={item.url}>
-                  <item.icon className="w-4 h-4" />
-                  <span>{item.title}</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {navigationItems.map((item) => {
+            // ── Collapsible item (has sub-items) ──
+            if (item.items) {
+              const isOpen = item.items.some((sub) => pathname.startsWith(sub.url))
+              return (
+                <Collapsible key={item.title} defaultOpen={isOpen} className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton tooltip={item.title}>
+                        <item.icon className="w-4 h-4" />
+                        <span>{item.title}</span>
+                        <ChevronRight className="ml-auto w-4 h-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {item.items.map((sub) => (
+                          <SidebarMenuSubItem key={sub.title}>
+                            <SidebarMenuSubButton asChild isActive={pathname === sub.url}>
+                              <a href={sub.url}>
+                                <span>{sub.title}</span>
+                              </a>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              )
+            }
+
+            // ── Regular flat item ──
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton asChild tooltip={item.title} isActive={pathname === item.url}>
+                  <a href={item.url!}>
+                    <item.icon className="w-4 h-4" />
+                    <span>{item.title}</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )
+          })}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>

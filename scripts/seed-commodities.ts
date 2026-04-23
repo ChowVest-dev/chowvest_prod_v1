@@ -1,0 +1,96 @@
+/**
+ * Seed script: inserts commodities from constants/commodities.ts into the DB.
+ * Run with:
+ *   DATABASE_URL=$(grep DATABASE_URL .env | cut -d '=' -f2-) npx ts-node --project tsconfig.json scripts/seed-commodities.ts
+ * Or simply:
+ *   pnpm tsx scripts/seed-commodities.ts
+ */
+
+import prisma from "@/lib/db";
+
+const COMMODITIES = [
+  // ===================
+  // RICE
+  // ===================
+  { sku: "RIC-LGL-LOC-B1",    category: "Rice",  brand: null, price: 100000, unit: "kg", size: 50,   name: "Long grain local rice",   image: "/rice.jpg", description: "Long grain local rice (1 bag)" },
+  { sku: "RIC-LGL-LOC-B0.5",  category: "Rice",  brand: null, price: 50000,  unit: "kg", size: 25,   name: "Long grain local rice",   image: "/rice.jpg", description: "Long grain local rice (half bag)" },
+  { sku: "RIC-LGL-LOC-B0.25", category: "Rice",  brand: null, price: 25000,  unit: "kg", size: 12.5, name: "Long grain local rice",   image: "/rice.jpg", description: "Long grain local rice (quarter bag)" },
+  { sku: "RIC-LGL-FOR-B1",    category: "Rice",  brand: null, price: 100000, unit: "kg", size: 50,   name: "Long grain foreign rice", image: "/rice.jpg", description: "Long grain foreign rice (1 bag)" },
+  { sku: "RIC-LGL-FOR-B0.5",  category: "Rice",  brand: null, price: 50000,  unit: "kg", size: 25,   name: "Long grain foreign rice", image: "/rice.jpg", description: "Long grain foreign rice (half bag)" },
+  { sku: "RIC-LGL-FOR-B0.25", category: "Rice",  brand: null, price: 25000,  unit: "kg", size: 12.5, name: "Long grain foreign rice", image: "/rice.jpg", description: "Long grain foreign rice (quarter bag)" },
+  { sku: "RIC-SGL-LOC-B1",    category: "Rice",  brand: null, price: 100000, unit: "kg", size: 50,   name: "Short grain local rice",  image: "/rice.jpg", description: "Short grain local rice (1 bag)" },
+  { sku: "RIC-SGL-LOC-B0.5",  category: "Rice",  brand: null, price: 50000,  unit: "kg", size: 25,   name: "Short grain local rice",  image: "/rice.jpg", description: "Short grain local rice (half bag)" },
+  { sku: "RIC-SGL-LOC-B0.25", category: "Rice",  brand: null, price: 25000,  unit: "kg", size: 12.5, name: "Short grain local rice",  image: "/rice.jpg", description: "Short grain local rice (quarter bag)" },
+  { sku: "RIC-SGL-FOR-B1",    category: "Rice",  brand: null, price: 100000, unit: "kg", size: 50,   name: "Short grain foreign rice",image: "/rice.jpg", description: "Short grain foreign rice (1 bag)" },
+  { sku: "RIC-SGL-FOR-B0.5",  category: "Rice",  brand: null, price: 50000,  unit: "kg", size: 25,   name: "Short grain foreign rice",image: "/rice.jpg", description: "Short grain foreign rice (half bag)" },
+  { sku: "RIC-SGL-FOR-B0.25", category: "Rice",  brand: null, price: 25000,  unit: "kg", size: 12.5, name: "Short grain foreign rice",image: "/rice.jpg", description: "Short grain foreign rice (quarter bag)" },
+  { sku: "RIC-OFA-BM",        category: "Rice",  brand: null, price: 100000, unit: "kg", size: 5,    name: "Ofada rice",              image: "/rice.jpg", description: "Ofada rice (5kg bag)" },
+  { sku: "RIC-OFA-BM-1",      category: "Rice",  brand: null, price: 50000,  unit: "kg", size: 6.3,  name: "Ofada rice",              image: "/rice.jpg", description: "Ofada rice (6.3kg bag)" },
+  { sku: "RIC-OFA-BM-2",      category: "Rice",  brand: null, price: 25000,  unit: "kg", size: 10,   name: "Ofada rice",              image: "/rice.jpg", description: "Ofada rice (10kg bag)" },
+  { sku: "RIC-OFA-B0.25",     category: "Rice",  brand: null, price: 25000,  unit: "kg", size: 12.5, name: "Ofada rice",              image: "/rice.jpg", description: "Ofada rice (Quarter bag)" },
+  { sku: "RIC-OFA-B0.5",      category: "Rice",  brand: null, price: 50000,  unit: "kg", size: 25,   name: "Ofada rice",              image: "/rice.jpg", description: "Ofada rice (Half bag)" },
+  { sku: "RIC-OFA-B1",        category: "Rice",  brand: null, price: 100000, unit: "kg", size: 50,   name: "Ofada rice",              image: "/rice.jpg", description: "Ofada rice (1 bag)" },
+  // Note: RIC-BAS-BS1 was duplicated in source — using it once
+  { sku: "RIC-BAS-BS1",       category: "Rice",  brand: null, price: 100000, unit: "kg", size: 35,   name: "Basmati rice",            image: "/rice.jpg", description: "Basmati rice (35kg bag)" },
+  { sku: "RIC-BAS-BS2",       category: "Rice",  brand: null, price: 100000, unit: "kg", size: 22,   name: "Basmati rice",            image: "/rice.jpg", description: "Basmati rice (22kg bag)" },
+  { sku: "RIC-BAS-BS3",       category: "Rice",  brand: null, price: 100000, unit: "kg", size: 10,   name: "Basmati rice",            image: "/rice.jpg", description: "Basmati rice (10kg bag)" },
+  { sku: "RIC-BAS-BS4",       category: "Rice",  brand: null, price: 100000, unit: "kg", size: 5,    name: "Basmati rice",            image: "/rice.jpg", description: "Basmati rice (5kg bag)" },
+  { sku: "RIC-BAS-BS5",       category: "Rice",  brand: null, price: 100000, unit: "kg", size: 2,    name: "Basmati rice",            image: "/rice.jpg", description: "Basmati rice (2kg bag)" },
+  // ===================
+  // BEANS
+  // ===================
+  { sku: "BEA-DRM-OLO-B1",    category: "Beans", brand: null, price: 100000, unit: "kg", size: 50,   name: "Olotu beans",  image: "/Olotu beans.jpg",  description: "Drum beans (Olotu - 1 bag)" },
+  { sku: "BEA-DRM-OLO-B0.5",  category: "Beans", brand: null, price: 50000,  unit: "kg", size: 25,   name: "Olotu beans",  image: "/Olotu beans.jpg",  description: "Olotu beans (Olotu - half bag)" },
+  { sku: "BEA-DRM-OLO-B0.25", category: "Beans", brand: null, price: 25000,  unit: "kg", size: 12.5, name: "Olotu beans",  image: "/Olotu beans.jpg",  description: "Olotu beans (Olotu - quarter bag)" },
+  { sku: "BEA-WHT-STD-B1",    category: "Beans", brand: null, price: 100000, unit: "kg", size: 50,   name: "White beans",  image: "/Sokoto Beans.png", description: "White beans (1 bag)" },
+  { sku: "BEA-WHT-STD-B0.5",  category: "Beans", brand: null, price: 50000,  unit: "kg", size: 25,   name: "White beans",  image: "/Sokoto Beans.png", description: "White beans (half bag)" },
+  { sku: "BEA-WHT-STD-B0.25", category: "Beans", brand: null, price: 25000,  unit: "kg", size: 12.5, name: "White beans",  image: "/Sokoto Beans.png", description: "White beans (quarter bag)" },
+  // ===================
+  // GARRI
+  // ===================
+  { sku: "GAR-YEL-STD-B1",    category: "Garri", brand: null, price: 100000, unit: "kg", size: 50,   name: "Yellow garri", image: "/Yellow garri.webp",description: "Yellow garri (1 bag)" },
+  { sku: "GAR-YEL-STD-B0.5",  category: "Garri", brand: null, price: 50000,  unit: "kg", size: 25,   name: "Yellow garri", image: "/Yellow garri.webp",description: "Yellow garri (half bag)" },
+  { sku: "GAR-YEL-STD-B0.25", category: "Garri", brand: null, price: 25000,  unit: "kg", size: 12.5, name: "Yellow garri", image: "/Yellow garri.webp",description: "Yellow garri (quarter bag)" },
+  { sku: "GAR-WHT-IJB-B1",    category: "Garri", brand: null, price: 100000, unit: "kg", size: 50,   name: "White garri",  image: "/Garri-2.jpg",      description: "White garri (Ijebu - 1 bag)" },
+  { sku: "GAR-WHT-IJB-B0.5",  category: "Garri", brand: null, price: 50000,  unit: "kg", size: 25,   name: "White garri",  image: "/Garri-2.jpg",      description: "White garri (Ijebu - half bag)" },
+  { sku: "GAR-WHT-IJB-B0.25", category: "Garri", brand: null, price: 25000,  unit: "kg", size: 12.5, name: "White garri",  image: "/Garri-2.jpg",      description: "White garri (Ijebu - quarter bag)" },
+];
+
+async function main() {
+ // console.log(`🌱 Seeding ${COMMODITIES.length} commodities...`);
+
+  let created = 0;
+  let skipped = 0;
+
+  for (const c of COMMODITIES) {
+    const exists = await prisma.commodity.findUnique({ where: { sku: c.sku } });
+    if (exists) {
+     // console.log(`  ⏭  Skipped (already exists): ${c.sku}`);
+      skipped++;
+      continue;
+    }
+    await prisma.commodity.create({
+      data: {
+        sku: c.sku,
+        name: c.name,
+        category: c.category,
+        brand: c.brand,
+        price: c.price,
+        unit: c.unit,
+        size: c.size,
+        image: c.image,
+        description: c.description,
+        marketType: "SAVINGS", // default — can be changed in admin
+        isActive: true,
+      },
+    });
+    //console.log(`  ✅ Created: ${c.sku} — ${c.name}`);
+    created++;
+  }
+
+ // console.log(`\nDone! ${created} created, ${skipped} skipped.`);
+}
+
+main()
+  .catch((e) => { console.error(e); process.exit(1); })
+  .finally(() => prisma.$disconnect());

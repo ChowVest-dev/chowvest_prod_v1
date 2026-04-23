@@ -193,6 +193,103 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
           </CardContent>
         </Card>
 
+        {/* ── Basket Goals ── */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-lg">Basket Goals</CardTitle>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {user.baskets.length} goal{user.baskets.length !== 1 ? "s" : ""} total
+              </p>
+            </div>
+            <a
+              href={`/admin/goals?userId=${user.id}`}
+              className="text-xs text-primary underline underline-offset-2 hover:opacity-80"
+            >
+              View in Goals tab →
+            </a>
+          </CardHeader>
+          <CardContent>
+            {user.baskets.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground border rounded-lg border-dashed">
+                This user has no basket goals yet.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[...user.baskets]
+                  .sort((a, b) => {
+                    const order = ["ACTIVE", "COMPLETED", "PAUSED", "CANCELLED"];
+                    return order.indexOf(a.status) - order.indexOf(b.status);
+                  })
+                  .map((basket) => {
+                    const goal = Number(basket.goalAmount);
+                    const current = Number(basket.currentAmount);
+                    const pct = goal > 0 ? Math.min(100, Math.round((current / goal) * 100)) : 0;
+
+                    const statusColor: Record<string, string> = {
+                      ACTIVE:    "bg-green-500/10 text-green-600 border-green-500/20",
+                      COMPLETED: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+                      PAUSED:    "bg-amber-500/10 text-amber-600 border-amber-500/20",
+                      CANCELLED: "bg-muted text-muted-foreground",
+                    };
+
+                    const barColor: Record<string, string> = {
+                      ACTIVE:    "bg-green-500",
+                      COMPLETED: "bg-blue-500",
+                      PAUSED:    "bg-amber-500",
+                      CANCELLED: "bg-muted-foreground/40",
+                    };
+
+                    return (
+                      <div
+                        key={basket.id}
+                        className="rounded-xl border p-4 space-y-3 hover:bg-muted/30 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="font-semibold text-sm leading-tight">{basket.name}</p>
+                            {basket.commodityType && (
+                              <p className="text-xs text-muted-foreground">{basket.commodityType}</p>
+                            )}
+                          </div>
+                          <Badge
+                            variant="outline"
+                            className={`text-xs shrink-0 ${statusColor[basket.status] ?? ""}`}
+                          >
+                            {basket.status}
+                          </Badge>
+                        </div>
+
+                        <div>
+                          <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                            <span>₦{current.toLocaleString()}</span>
+                            <span>{pct}%</span>
+                          </div>
+                          <div className="h-2 rounded-full bg-muted overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${barColor[basket.status] ?? "bg-primary"}`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1 text-right">
+                            Goal: ₦{goal.toLocaleString()}
+                          </p>
+                        </div>
+
+                        <div className="flex justify-between text-xs text-muted-foreground pt-1 border-t">
+                          <span>Created {new Date(basket.createdAt).toLocaleDateString()}</span>
+                          {basket.targetDate && (
+                            <span>Target {new Date(basket.targetDate).toLocaleDateString()}</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
       </div>
     </>
   );

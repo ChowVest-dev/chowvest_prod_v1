@@ -453,20 +453,19 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
                 return (
                   <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
                     <p className="font-bold flex items-center gap-2 mb-1 text-red-600">
-                      <span className="text-lg">⚠️</span> Early Cancellation Fee
+                      <span className="text-lg">⚠️</span> Processing Fee for cancellation 
                     </p>
                     <p className="mb-2">
-                      An early cancellation fee of <span className="font-bold">5% (₦{penalty.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</span> will be deducted from your savings.
+                      A <span className="font-bold">5% (₦{penalty.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})</span> will be deducted from your savings.
                     </p>
                     <p>
-                      You will receive <span className="font-bold text-green-700">₦{refund.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> back into your primary wallet immediately. You will also lose your progress towards this goal.
+                      You will receive <span className="font-bold text-green-700">₦{refund.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> back into your primary wallet immediately. Your progress will be reset for this goal.
                     </p>
                   </div>
                 );
               })()}
               <p className="text-xs text-muted-foreground mt-2">
-                This goal will be moved to a cancelled state. You can
-                permanently delete it later if you wish.
+                This basket will be marked as cancelled. You can still view it later and permanently delete it later if you wish.
               </p>
             </DialogDescription>
           </DialogHeader>

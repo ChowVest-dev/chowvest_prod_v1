@@ -3,14 +3,16 @@
 import prisma from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
+const MARKET_PATHS = ["/admin/market", "/admin/market/savings", "/admin/market/marketplace"];
+const revalidateAll = () => MARKET_PATHS.forEach((p) => revalidatePath(p));
+
 export async function updateCommodityPrice(commodityId: string, newPrice: number) {
   if (isNaN(newPrice) || newPrice <= 0) throw new Error("Invalid price");
-
   await prisma.commodity.update({
     where: { id: commodityId },
     data: { price: newPrice, updatedAt: new Date() },
   });
-  revalidatePath("/admin/market");
+  revalidateAll();
 }
 
 export async function toggleCommodityStatus(commodityId: string, isActive: boolean) {
@@ -18,7 +20,7 @@ export async function toggleCommodityStatus(commodityId: string, isActive: boole
     where: { id: commodityId },
     data: { isActive, updatedAt: new Date() },
   });
-  revalidatePath("/admin/market");
+  revalidateAll();
 }
 
 export async function createCommodity(data: {
@@ -29,7 +31,9 @@ export async function createCommodity(data: {
   price: number;
   unit: string;
   size: number;
+  image?: string;
   description?: string;
+  marketType?: string;
 }) {
   if (!data.name || !data.sku || !data.category || !data.unit || data.price <= 0 || data.size <= 0) {
     throw new Error("All required fields must be valid.");
@@ -43,11 +47,40 @@ export async function createCommodity(data: {
       price: data.price,
       unit: data.unit,
       size: data.size,
+      image: data.image || null,
       description: data.description || null,
+      marketType: data.marketType ?? "SAVINGS",
       isActive: true,
     },
   });
-  revalidatePath("/admin/market");
+  revalidateAll();
+}
+
+export async function updateCommodity(
+  commodityId: string,
+  data: {
+    name?: string;
+    sku?: string;
+    category?: string;
+    brand?: string | null;
+    price?: number;
+    unit?: string;
+    size?: number;
+    image?: string | null;
+    description?: string | null;
+    marketType?: string;
+  }
+) {
+  if (data.price !== undefined && (isNaN(data.price) || data.price <= 0))
+    throw new Error("Invalid price");
+  if (data.size !== undefined && (isNaN(data.size) || data.size <= 0))
+    throw new Error("Invalid size");
+
+  await prisma.commodity.update({
+    where: { id: commodityId },
+    data: { ...data, updatedAt: new Date() },
+  });
+  revalidateAll();
 }
 
 export async function updatePlatformConfig(key: string, value: string) {
@@ -59,5 +92,5 @@ export async function updatePlatformConfig(key: string, value: string) {
     update: { value: String(numValue) },
     create: { key, value: String(numValue), label: key },
   });
-  revalidatePath("/admin/market");
+  revalidateAll();
 }
