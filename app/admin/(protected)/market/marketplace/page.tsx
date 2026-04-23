@@ -7,23 +7,13 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { EditCommodityButton, ToggleCommodityStatus, AddCommodityButton, EditConfigButton } from "./client-components";
+import { EditCommodityButton, ToggleCommodityStatus, AddCommodityButton } from "../client-components";
 
-// Default values in case DB hasn't been seeded yet
-const CONFIG_DEFAULTS: Record<string, { label: string; default: string }> = {
-  DELIVERY_FEE_EXPRESS:   { label: "Express Delivery Fee",   default: "1200" },
-  DELIVERY_FEE_STANDARD:  { label: "Standard Delivery Fee",  default: "700" },
-  DELIVERY_FEE_SCHEDULED: { label: "Scheduled Delivery Fee", default: "500" },
-  SERVICE_FEE:            { label: "Service Fee",            default: "100" },
-};
-
-export default async function AdminMarketPage() {
-  const [commodities, configs] = await Promise.all([
-    prisma.commodity.findMany({ orderBy: { category: "asc" } }),
-    prisma.platformConfig.findMany(),
-  ]);
-
-  const configMap = Object.fromEntries(configs.map((c) => [c.key, c.value]));
+export default async function MarketplacePage() {
+  const commodities = await prisma.commodity.findMany({
+    where: { marketType: { in: ["MARKETPLACE", "BOTH"] } },
+    orderBy: { category: "asc" },
+  });
 
   return (
     <>
@@ -38,7 +28,7 @@ export default async function AdminMarketPage() {
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>
-                <BreadcrumbPage>Market & Pricing</BreadcrumbPage>
+                <BreadcrumbPage>Market › Marketplace</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -46,12 +36,13 @@ export default async function AdminMarketPage() {
       </header>
 
       <div className="flex flex-1 flex-col gap-8 p-4 md:p-6 lg:p-8">
-        {/* ── Commodity Catalogue ── */}
         <div>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">Market Catalogue</h1>
-              <p className="text-muted-foreground">Manage commodity prices and product availability.</p>
+              <h1 className="text-2xl font-bold tracking-tight">Marketplace Catalogue</h1>
+              <p className="text-muted-foreground">
+                Manage products available for direct purchase in the Chowvest marketplace.
+              </p>
             </div>
             <AddCommodityButton />
           </div>
@@ -67,7 +58,6 @@ export default async function AdminMarketPage() {
                     <th className="px-4 py-4 font-medium">Category</th>
                     <th className="px-4 py-4 font-medium">Size / Unit</th>
                     <th className="px-4 py-4 font-medium">Price (₦)</th>
-                    <th className="px-4 py-4 font-medium">Listed In</th>
                     <th className="px-4 py-4 font-medium">Status</th>
                     <th className="px-4 py-4 font-medium text-right">Actions</th>
                   </tr>
@@ -97,20 +87,6 @@ export default async function AdminMarketPage() {
                       <td className="px-4 py-3 font-mono">{Number(c.size)}{c.unit}</td>
                       <td className="px-4 py-3 font-mono font-semibold">
                         ₦{Number(c.price).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge
-                          variant="outline"
-                          className={
-                            c.marketType === "BOTH"
-                              ? "bg-blue-500/10 text-blue-600 border-blue-500/20"
-                              : c.marketType === "MARKETPLACE"
-                                ? "bg-purple-500/10 text-purple-600 border-purple-500/20"
-                                : "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                          }
-                        >
-                          {c.marketType === "BOTH" ? "Both" : c.marketType === "MARKETPLACE" ? "Marketplace" : "Savings"}
-                        </Badge>
                       </td>
                       <td className="px-4 py-3">
                         <Badge
@@ -146,7 +122,7 @@ export default async function AdminMarketPage() {
                   ))}
                   {commodities.length === 0 && (
                     <tr>
-                      <td colSpan={9} className="px-6 py-8 text-center text-muted-foreground">
+                      <td colSpan={8} className="px-6 py-8 text-center text-muted-foreground">
                         No commodities in the catalogue yet.
                       </td>
                     </tr>
@@ -155,31 +131,6 @@ export default async function AdminMarketPage() {
               </table>
             </div>
           </Card>
-        </div>
-
-        {/* ── Delivery & Fee Settings ── */}
-        <div>
-          <div className="mb-4">
-            <h2 className="text-xl font-bold tracking-tight">Delivery & Fee Settings</h2>
-            <p className="text-muted-foreground">
-              These values are fetched live by the delivery API on every request.
-            </p>
-          </div>
-
-          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            {Object.entries(CONFIG_DEFAULTS).map(([key, { label, default: defaultVal }]) => {
-              const currentValue = configMap[key] ?? defaultVal;
-              return (
-                <Card key={key} className="rounded-xl border shadow-sm p-5">
-                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">{label}</p>
-                  <p className="text-2xl font-bold font-mono">₦{Number(currentValue).toLocaleString()}</p>
-                  <div className="mt-3">
-                    <EditConfigButton configKey={key} currentValue={currentValue} label={label} />
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
         </div>
       </div>
     </>
