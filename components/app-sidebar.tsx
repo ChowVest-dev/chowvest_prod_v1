@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import {
   Bot,
   ChevronRight,
@@ -47,8 +47,11 @@ const navigationItems: NavItem[] = [
   },
   {
     title: "Users",
-    url: "/admin/users",
     icon: Bot,
+    items: [
+      { title: "All Users", url: "/admin/users?tab=all" },
+      { title: "Active Users", url: "/admin/users?tab=active" },
+    ],
   },
   {
     title: "Goals",
@@ -83,6 +86,7 @@ const navigationItems: NavItem[] = [
 
 export function AppSidebar({ admin, ...props }: React.ComponentProps<typeof Sidebar> & { admin?: any }) {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const adminUser = {
     name: admin?.name || "Admin",
     email: admin?.email || "admin@chowvest.com",
@@ -104,7 +108,7 @@ export function AppSidebar({ admin, ...props }: React.ComponentProps<typeof Side
           {navigationItems.map((item) => {
             // ── Collapsible item (has sub-items) ──
             if (item.items) {
-              const isOpen = item.items.some((sub) => pathname.startsWith(sub.url))
+              const isOpen = item.items.some((sub) => pathname.startsWith(sub.url.split('?')[0]))
               return (
                 <Collapsible key={item.title} defaultOpen={isOpen} className="group/collapsible">
                   <SidebarMenuItem>
@@ -117,15 +121,20 @@ export function AppSidebar({ admin, ...props }: React.ComponentProps<typeof Side
                     </CollapsibleTrigger>
                     <CollapsibleContent>
                       <SidebarMenuSub>
-                        {item.items.map((sub) => (
-                          <SidebarMenuSubItem key={sub.title}>
-                            <SidebarMenuSubButton asChild isActive={pathname === sub.url}>
-                              <a href={sub.url}>
-                                <span>{sub.title}</span>
-                              </a>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
+                        {item.items.map((sub) => {
+                          const currentUrl = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : '');
+                          const isActive = sub.url === currentUrl || (sub.url === '/admin/users?tab=all' && currentUrl === '/admin/users');
+                          
+                          return (
+                            <SidebarMenuSubItem key={sub.title}>
+                              <SidebarMenuSubButton asChild isActive={isActive}>
+                                <a href={sub.url}>
+                                  <span>{sub.title}</span>
+                                </a>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          );
+                        })}
                       </SidebarMenuSub>
                     </CollapsibleContent>
                   </SidebarMenuItem>
