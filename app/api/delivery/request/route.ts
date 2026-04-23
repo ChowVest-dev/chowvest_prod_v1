@@ -3,7 +3,6 @@ import { getSession } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { logAction } from "@/lib/audit";
-import { COMMODITIES } from "@/constants/commodities";
 import { sendDeliveryStatusEmail } from "@/lib/email-delivery";
 import {
   sendDeliveryRequestNotification,
@@ -218,7 +217,7 @@ export async function POST(req: NextRequest) {
 
     // Get commodity info for notifications
     const commodity = basket.commodityType
-      ? COMMODITIES.find((c) => c.sku === basket.commodityType)
+      ? await prisma.commodity.findUnique({ where: { sku: basket.commodityType } })
       : null;
     const itemName = commodity
       ? `${commodity.name} (${commodity.size}${commodity.unit})`

@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import prisma from "@/lib/db";
 import { DeliveryFlow } from "@/components/delivery/delivery-flow";
 import { DeliveryContainer } from "@/components/delivery/delivery-container";
-import { COMMODITIES } from "@/constants/commodities";
 
 export default async function DeliveryPage({
   params,
@@ -54,9 +53,24 @@ export default async function DeliveryPage({
     status: basket.status,
   };
 
-  const commodity = basket.commodityType
-    ? COMMODITIES.find((c) => c.sku === basket.commodityType) || null
+  const dbCommodity = basket.commodityType
+    ? await prisma.commodity.findUnique({ where: { sku: basket.commodityType } })
     : null;
+
+  const commodity = dbCommodity ? {
+    id: dbCommodity.id,
+    sku: dbCommodity.sku,
+    name: dbCommodity.name,
+    category: dbCommodity.category,
+    brand: dbCommodity.brand,
+    price: Number(dbCommodity.price),
+    unit: dbCommodity.unit,
+    size: Number(dbCommodity.size),
+    image: dbCommodity.image,
+    description: dbCommodity.description,
+    marketType: dbCommodity.marketType,
+    isActive: dbCommodity.isActive
+  } : null;
 
   const commodityName = commodity ? commodity.name : basket.name;
 

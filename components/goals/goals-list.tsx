@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useState } from "react";
 import { toast } from "sonner";
-import { COMMODITIES } from "@/constants/commodities";
 import axios from "axios";
 import {
   DropdownMenu,
@@ -241,17 +240,9 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
           const progress = (goal.currentAmount / goal.goalAmount) * 100;
           const remaining = goal.goalAmount - goal.currentAmount;
 
-          // Resolve commodity details if SKU exists
-          const commodity = goal.commodityType
-            ? COMMODITIES.find((c) => c.sku === goal.commodityType)
-            : null;
-
-          const displayName = commodity
-            ? `${commodity.name} (${commodity.size}${commodity.unit})`
-            : goal.name;
-          const displayImage =
-            commodity?.image || goal.image || "/placeholder.svg";
-          const displayCategory = commodity?.category || goal.category;
+          const displayName = goal.name;
+          const displayImage = goal.image || "/placeholder.svg";
+          const displayCategory = goal.category;
 
           return (
             <Card
