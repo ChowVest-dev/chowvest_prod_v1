@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { EditCommodityButton, ToggleCommodityStatus, AddCommodityButton, EditConfigButton } from "./client-components";
+import { EditCommodityButton, ToggleCommodityStatus, AddCommodityButton, EditConfigButton } from "../client-components";
 
 // Default values in case DB hasn't been seeded yet
 const CONFIG_DEFAULTS: Record<string, { label: string; default: string }> = {
@@ -17,9 +17,12 @@ const CONFIG_DEFAULTS: Record<string, { label: string; default: string }> = {
   SERVICE_FEE:            { label: "Service Fee",            default: "100" },
 };
 
-export default async function AdminMarketPage() {
+export default async function SavingsMarketPage() {
   const [commodities, configs] = await Promise.all([
-    prisma.commodity.findMany({ orderBy: { category: "asc" } }),
+    prisma.commodity.findMany({
+      where: { marketType: { in: ["SAVINGS", "BOTH"] } },
+      orderBy: { category: "asc" },
+    }),
     prisma.platformConfig.findMany(),
   ]);
 
@@ -38,7 +41,7 @@ export default async function AdminMarketPage() {
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>
-                <BreadcrumbPage>Market & Pricing</BreadcrumbPage>
+                <BreadcrumbPage>Market › Savings</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -50,8 +53,10 @@ export default async function AdminMarketPage() {
         <div>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">Market Catalogue</h1>
-              <p className="text-muted-foreground">Manage commodity prices and product availability.</p>
+              <h1 className="text-2xl font-bold tracking-tight">Savings Commodity Catalogue</h1>
+              <p className="text-muted-foreground">
+                Manage the commodities users can save toward. Update prices, images, and availability.
+              </p>
             </div>
             <AddCommodityButton />
           </div>
@@ -67,7 +72,6 @@ export default async function AdminMarketPage() {
                     <th className="px-4 py-4 font-medium">Category</th>
                     <th className="px-4 py-4 font-medium">Size / Unit</th>
                     <th className="px-4 py-4 font-medium">Price (₦)</th>
-                    <th className="px-4 py-4 font-medium">Listed In</th>
                     <th className="px-4 py-4 font-medium">Status</th>
                     <th className="px-4 py-4 font-medium text-right">Actions</th>
                   </tr>
@@ -97,20 +101,6 @@ export default async function AdminMarketPage() {
                       <td className="px-4 py-3 font-mono">{Number(c.size)}{c.unit}</td>
                       <td className="px-4 py-3 font-mono font-semibold">
                         ₦{Number(c.price).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge
-                          variant="outline"
-                          className={
-                            c.marketType === "BOTH"
-                              ? "bg-blue-500/10 text-blue-600 border-blue-500/20"
-                              : c.marketType === "MARKETPLACE"
-                                ? "bg-purple-500/10 text-purple-600 border-purple-500/20"
-                                : "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                          }
-                        >
-                          {c.marketType === "BOTH" ? "Both" : c.marketType === "MARKETPLACE" ? "Marketplace" : "Savings"}
-                        </Badge>
                       </td>
                       <td className="px-4 py-3">
                         <Badge
@@ -146,7 +136,7 @@ export default async function AdminMarketPage() {
                   ))}
                   {commodities.length === 0 && (
                     <tr>
-                      <td colSpan={9} className="px-6 py-8 text-center text-muted-foreground">
+                      <td colSpan={8} className="px-6 py-8 text-center text-muted-foreground">
                         No commodities in the catalogue yet.
                       </td>
                     </tr>

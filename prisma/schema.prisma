@@ -332,6 +332,9 @@ model Commodity {
   image       String?
   description String? @db.Text
 
+  // Market placement: "SAVINGS", "MARKETPLACE", "BOTH"
+  marketType String @default("SAVINGS")
+
   // Status
   isActive Boolean @default(true)
 
@@ -343,8 +346,10 @@ model Commodity {
 
   @@index([category])
   @@index([sku])
+  @@index([marketType])
   @@map("commodities")
 }
+
 
 // ============================================
 // ORDERS
