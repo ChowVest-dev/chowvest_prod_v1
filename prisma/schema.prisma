@@ -217,7 +217,8 @@ enum TransactionType {
   TRANSFER_FROM_BASKET // Move money from basket back to wallet
   MARKET_PURCHASE // Purchase from marketplace
   REFUND // Refund to wallet
-  FEE // Platform fee
+  CANCELLATION_FEE // Penalty fee for early goal cancellation
+  SERVICE_FEE // Platform service fee
   REVERSAL // Transaction reversal
   DELIVERY_FEE // Delivery fee
   CREDIT_USER // Credit user during increase or decrease of market price
