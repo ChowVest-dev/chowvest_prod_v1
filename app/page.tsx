@@ -184,7 +184,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <Button asChild className="w-full">
-                  <Link href="/dashboard">Get Started</Link>
+                  <Link href="/">Get Started</Link>
                 </Button>
               </div>
             </div>
@@ -213,7 +213,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <Button asChild className="w-full">
-                  <Link href="/dashboard">Get Started</Link>
+                  <Link href="/">Get Started</Link>
                 </Button>
               </div>
             </div>
@@ -242,7 +242,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <Button asChild className="w-full">
-                  <Link href="/dashboard">Get Started</Link>
+                  <Link href="/">Get Started</Link>
                 </Button>
               </div>
             </div>
