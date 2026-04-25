@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { DeliveryStatusChanger } from "./client-components";
-
+import { KanbanBoard } from "./kanban";
 import { SearchBar } from "@/components/admin/search-bar";
 
 export default async function AdminDeliveriesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
@@ -121,12 +121,17 @@ export default async function AdminDeliveriesPage({ searchParams }: { searchPara
           </div>
         </div>
 
-        <Tabs defaultValue="active" className="w-full">
+        <Tabs defaultValue="kanban" className="w-full">
           <TabsList className="mb-4">
-            <TabsTrigger value="active">Active Queue</TabsTrigger>
+            <TabsTrigger value="kanban">Kanban Board</TabsTrigger>
+            <TabsTrigger value="active">Active List</TabsTrigger>
             <TabsTrigger value="history">Historical Log</TabsTrigger>
           </TabsList>
-          
+
+          <TabsContent value="kanban">
+            <KanbanBoard deliveries={activeDeliveries} />
+          </TabsContent>
+
           <TabsContent value="active">
             <Card className="rounded-xl border shadow-sm">
               <DeliveryTable data={activeDeliveries} />

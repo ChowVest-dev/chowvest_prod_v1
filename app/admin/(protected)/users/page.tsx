@@ -7,18 +7,33 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { SearchBar } from "@/components/admin/search-bar";
 
-export default async function AdminUsersPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+export default async function AdminUsersPage({ searchParams }: { searchParams: Promise<{ q?: string, tab?: string }> }) {
   const query = (await searchParams).q || "";
+  const tab = (await searchParams).tab || "all";
+  
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },
-    where: query ? {
-      OR: [
-        { email: { contains: query, mode: "insensitive" } },
-        { fullName: { contains: query, mode: "insensitive" } },
-        { phoneNumber: { contains: query, mode: "insensitive" } }
+    where: {
+      AND: [
+        query ? {
+          OR: [
+            { email: { contains: query, mode: "insensitive" } },
+            { fullName: { contains: query, mode: "insensitive" } },
+            { phoneNumber: { contains: query, mode: "insensitive" } }
+          ]
+        } : {},
+        tab === "active" ? {
+          accountStatus: "active",
+          OR: [
+            { sessions: { some: { createdAt: { gte: thirtyDaysAgo } } } },
+            { transactions: { some: { createdAt: { gte: thirtyDaysAgo } } } },
+            { baskets: { some: { updatedAt: { gte: thirtyDaysAgo } } } }
+          ]
+        } : {}
       ]
-    } : undefined,
+    },
     include: {
       wallet: { select: { balance: true } }
     }
@@ -47,8 +62,14 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: P
       <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 lg:p-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Users Directory</h1>
-            <p className="text-muted-foreground">Manage and view all registered users.</p>
+            <h1 className="text-2xl font-bold tracking-tight">
+              {tab === "active" ? "Active Users" : "Users Directory"}
+            </h1>
+            <p className="text-muted-foreground">
+              {tab === "active" 
+                ? "Manage users with active accounts." 
+                : "Manage and view all registered users."}
+            </p>
           </div>
           <SearchBar placeholder="Search name or email..." />
         </div>

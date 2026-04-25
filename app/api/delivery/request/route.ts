@@ -3,20 +3,19 @@ import { getSession } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { logAction } from "@/lib/audit";
-import { COMMODITIES } from "@/constants/commodities";
 import { sendDeliveryStatusEmail } from "@/lib/email-delivery";
 import {
   sendDeliveryRequestNotification,
   sendDeliveryStatusNotification,
 } from "@/lib/notifications/delivery";
 
-const DELIVERY_FEES: Record<string, number> = {
-  EXPRESS: 1200,
-  STANDARD: 700,
-  SCHEDULED: 500,
+// Default fallback fees (used only if DB config hasn't been seeded)
+const FEE_DEFAULTS: Record<string, number> = {
+  DELIVERY_FEE_EXPRESS:   1200,
+  DELIVERY_FEE_STANDARD:  700,
+  DELIVERY_FEE_SCHEDULED: 500,
+  SERVICE_FEE:            100,
 };
-
-const SERVICE_FEE = 100;
 
 // Simulated rider pool
 const RIDERS = [
@@ -26,6 +25,7 @@ const RIDERS = [
   { name: "Tunde Bakare", phone: "0804-567-8901", rating: 4.9 },
   { name: "Emeka Nwosu", phone: "0805-678-9012", rating: 4.6 },
 ];
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -56,6 +56,18 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Fetch live delivery fees from DB (admin-configurable), fall back to defaults
+    const configs = await prisma.platformConfig.findMany({
+      where: { key: { in: ["DELIVERY_FEE_EXPRESS", "DELIVERY_FEE_STANDARD", "DELIVERY_FEE_SCHEDULED", "SERVICE_FEE"] } },
+    });
+    const configMap = Object.fromEntries(configs.map((c) => [c.key, parseFloat(c.value)]));
+    const DELIVERY_FEES: Record<string, number> = {
+      EXPRESS:   configMap["DELIVERY_FEE_EXPRESS"]   ?? FEE_DEFAULTS["DELIVERY_FEE_EXPRESS"],
+      STANDARD:  configMap["DELIVERY_FEE_STANDARD"]  ?? FEE_DEFAULTS["DELIVERY_FEE_STANDARD"],
+      SCHEDULED: configMap["DELIVERY_FEE_SCHEDULED"] ?? FEE_DEFAULTS["DELIVERY_FEE_SCHEDULED"],
+    };
+    const SERVICE_FEE = configMap["SERVICE_FEE"] ?? FEE_DEFAULTS["SERVICE_FEE"];
 
     // Verify basket belongs to user and is complete
     const basket = await prisma.basket.findFirst({
@@ -165,18 +177,36 @@ export async function POST(req: NextRequest) {
         data: { balance: { decrement: totalFee } }
       });
 
-      // Create fee transaction log
+      // 1. Create delivery fee transaction log
+      const balanceAfterDelivery = wallet.balance.sub(deliveryFee);
       await tx.transaction.create({
         data: {
           userId: session.user.id,
           walletId: wallet.id,
           basketId: basket.id,
-          type: "FEE",
-          amount: totalFee,
-          netAmount: totalFee,
-          description: `Delivery and Service Fee for ${basket.name}`,
+          type: "DELIVERY_FEE",
+          amount: deliveryFee,
+          netAmount: deliveryFee,
+          description: `Delivery Fee for ${basket.name}`,
           status: "COMPLETED",
           balanceBefore: wallet.balance,
+          balanceAfter: balanceAfterDelivery,
+          completedAt: now,
+        }
+      });
+
+      // 2. Create service fee transaction log
+      await tx.transaction.create({
+        data: {
+          userId: session.user.id,
+          walletId: wallet.id,
+          basketId: basket.id,
+          type: "SERVICE_FEE",
+          amount: SERVICE_FEE,
+          netAmount: SERVICE_FEE,
+          description: `Platform Service Fee for ${basket.name}`,
+          status: "COMPLETED",
+          balanceBefore: balanceAfterDelivery,
           balanceAfter: updatedWallet.balance,
           completedAt: now,
         }
@@ -187,7 +217,7 @@ export async function POST(req: NextRequest) {
 
     // Get commodity info for notifications
     const commodity = basket.commodityType
-      ? COMMODITIES.find((c) => c.sku === basket.commodityType)
+      ? await prisma.commodity.findUnique({ where: { sku: basket.commodityType } })
       : null;
     const itemName = commodity
       ? `${commodity.name} (${commodity.size}${commodity.unit})`

@@ -6,31 +6,41 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { AlertCircle, ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { AlertCircle, ArrowDownLeft, ArrowUpRight, TrendingUp } from "lucide-react";
 import { SearchBar } from "@/components/admin/search-bar";
 
 export default async function AdminFinancesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const query = (await searchParams).q || "";
 
-  const transactions = await prisma.transaction.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 100, // Reasonable cap for active view
-    where: query ? {
-      OR: [
-        { id: { contains: query, mode: "insensitive" } },
-        { processorTransactionId: { contains: query, mode: "insensitive" } },
-        { user: { email: { contains: query, mode: "insensitive" } } }
-      ]
-    } : undefined,
-    include: {
-      user: { select: { fullName: true, email: true } }
-    }
-  });
+  const [transactions, webhooks, revenueAgg] = await Promise.all([
+    prisma.transaction.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      where: query ? {
+        OR: [
+          { id: { contains: query, mode: "insensitive" } },
+          { processorTransactionId: { contains: query, mode: "insensitive" } },
+          { user: { email: { contains: query, mode: "insensitive" } } }
+        ]
+      } : undefined,
+      include: {
+        user: { select: { fullName: true, email: true } }
+      }
+    }),
+    prisma.processedWebhook.findMany({
+      orderBy: { processedAt: "desc" },
+      take: 100,
+    }),
+    prisma.transaction.aggregate({
+      _sum: { fee: true, processorFee: true },
+      where: { status: "COMPLETED" },
+    }),
+  ]);
 
-  const webhooks = await prisma.processedWebhook.findMany({
-    orderBy: { processedAt: "desc" },
-    take: 100,
-  });
+  const grossFees    = Number(revenueAgg._sum.fee || 0);
+  const paystackCut  = Number(revenueAgg._sum.processorFee || 0);
+  const netRevenue   = grossFees - paystackCut;
+
 
   const flaggedTransactions = transactions.filter(t => t.isFlagged);
 
@@ -61,7 +71,7 @@ export default async function AdminFinancesPage({ searchParams }: { searchParams
                   )}
                   <div className="flex flex-col gap-0.5">
                     <span className="font-semibold">
-                      {tx.type === "FEE" ? "DELIVERY FEE" : tx.type.replace(/_/g, ' ')}
+                      {tx.type === "DELIVERY_FEE" ? "DELIVERY FEE" : tx.type.replace(/_/g, ' ')}
                     </span>
                     <span className="text-xs font-mono text-muted-foreground">ID: {tx.id.split("-").pop() || tx.id.slice(0, 8)}</span>
                     {tx.processorTransactionId && (
@@ -158,6 +168,27 @@ export default async function AdminFinancesPage({ searchParams }: { searchParams
                  {flaggedTransactions.length} Flagged Detected!
                </div>
             )}
+          </div>
+        </div>
+
+        {/* Revenue Summary Cards */}
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+          <div className="rounded-xl border bg-card shadow-sm p-5">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Gross Collected Fees</p>
+            <p className="text-2xl font-bold mt-1 font-mono">₦{grossFees.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground mt-1">All platform fees, all time</p>
+          </div>
+          <div className="rounded-xl border bg-card shadow-sm p-5">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Paystack Cut</p>
+            <p className="text-2xl font-bold mt-1 font-mono text-red-500">₦{paystackCut.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground mt-1">Processor fees paid out</p>
+          </div>
+          <div className="rounded-xl border bg-green-500/10 border-green-500/20 shadow-sm p-5">
+            <p className="text-xs text-green-700 font-medium uppercase tracking-wide flex items-center gap-1">
+              <TrendingUp className="w-3.5 h-3.5" /> Net Revenue
+            </p>
+            <p className="text-2xl font-bold mt-1 font-mono text-green-600">₦{netRevenue.toLocaleString()}</p>
+            <p className="text-xs text-green-700/70 mt-1">After processor deductions</p>
           </div>
         </div>
 

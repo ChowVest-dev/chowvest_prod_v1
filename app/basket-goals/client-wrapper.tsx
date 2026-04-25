@@ -4,7 +4,6 @@ import { Box, Target } from "lucide-react";
 import { CreateGoalCard } from "@/components/goals/create-goal-card";
 import { GoalsList } from "@/components/goals/goals-list";
 import { GoalsHeader } from "@/components/goals/goals-header";
-import { COMMODITIES } from "@/constants/commodities";
 import { useState, useEffect, useCallback, Suspense } from "react";
 import axios from "axios";
 import { BouncingDots } from "@/components/ui/bouncing-dots";
@@ -153,15 +152,8 @@ function BasketGoalsClientInner({
               </div>
             ) : (
               completedBaskets.map((basket) => {
-                const commodity = basket.commodityType
-                  ? COMMODITIES.find((c) => c.sku === basket.commodityType)
-                  : null;
-
-                const displayName = commodity
-                  ? `${commodity.name} (${commodity.size}${commodity.unit})`
-                  : basket.name;
-                const displayImage =
-                  commodity?.image || basket.image || "/rice.jpg";
+                const displayName = basket.name;
+                const displayImage = basket.image || "/rice.jpg";
 
                 return (
                   <Card 

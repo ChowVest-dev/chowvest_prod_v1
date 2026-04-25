@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { COMMODITIES } from "@/constants/commodities";
 import { useRouter } from "next/navigation";
 
 interface Basket {
@@ -48,16 +47,8 @@ export function ActiveGoals({ baskets }: ActiveGoalsProps) {
         {baskets.map((goal) => {
           const progress = (goal.currentAmount / goal.goalAmount) * 100;
 
-          // Resolve commodity details if SKU exists
-          const commodity = goal.commodityType
-            ? COMMODITIES.find((c) => c.sku === goal.commodityType)
-            : null;
-
-          const displayName = commodity
-            ? `${commodity.name} (${commodity.size}${commodity.unit})`
-            : goal.name;
-          const displayImage =
-            commodity?.image || goal.image || "/placeholder.svg";
+          const displayName = goal.name;
+          const displayImage = goal.image || "/placeholder.svg";
 
           return (
             <Card key={goal.name} className="p-4 bg-accent/30 border-border/50">

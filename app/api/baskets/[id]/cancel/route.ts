@@ -72,7 +72,8 @@ export async function POST(
           },
         });
 
-        // Create transaction record
+        // 1. Create full refund transaction record
+        const balanceAfterRefund = wallet.balance.add(originalAmount);
         await tx.transaction.create({
           data: {
             userId: session.user.id,
@@ -80,10 +81,27 @@ export async function POST(
             basketId: basket.id,
             type: "TRANSFER_FROM_BASKET",
             amount: originalAmount,
-            netAmount: netRefundAmount,
-            description: `Refund from cancelled goal: ${basket.name} (5% fee applied)`,
+            netAmount: originalAmount,
+            description: `Refund from cancelled goal: ${basket.name}`,
             status: "COMPLETED",
             balanceBefore: wallet.balance,
+            balanceAfter: balanceAfterRefund,
+            completedAt: new Date(),
+          },
+        });
+
+        // 2. Create the fee transaction record
+        await tx.transaction.create({
+          data: {
+            userId: session.user.id,
+            walletId: wallet.id,
+            basketId: basket.id,
+            type: "CANCELLATION_FEE",
+            amount: penaltyAmount,
+            netAmount: penaltyAmount,
+            description: `Early Cancellation Fee for ${basket.name}`,
+            status: "COMPLETED",
+            balanceBefore: balanceAfterRefund,
             balanceAfter: updatedWallet.balance,
             completedAt: new Date(),
           },

@@ -18,10 +18,9 @@ import {
   Check,
   Calendar as CalendarIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import axios from "axios";
-import { COMMODITIES } from "@/constants/commodities";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
@@ -29,47 +28,27 @@ interface CreateGoalCardProps {
   onGoalCreated?: () => void;
 }
 
-// Group commodities by category
-const groupedCommodities = COMMODITIES.reduce(
-  (acc, commodity) => {
-    if (!acc[commodity.category]) {
-      acc[commodity.category] = [];
-    }
-    acc[commodity.category].push(commodity);
-    return acc;
-  },
-  {} as Record<string, typeof COMMODITIES>,
-);
-
-// Get unique categories
-const categories = Object.keys(groupedCommodities);
-
-// Get unique commodity types within a category (by name)
-const getCommodityTypes = (category: string) => {
-  const commodities = groupedCommodities[category] || [];
-  const uniqueTypes = new Map<string, (typeof COMMODITIES)[0]>();
-
-  commodities.forEach((commodity) => {
-    if (!uniqueTypes.has(commodity.name)) {
-      uniqueTypes.set(commodity.name, commodity);
-    }
-  });
-
-  return Array.from(uniqueTypes.values());
-};
-
-// Get size variants for a specific commodity type
-const getSizeVariants = (category: string, commodityName: string) => {
-  const commodities = groupedCommodities[category] || [];
-  return commodities.filter((c) => c.name === commodityName);
-};
+export interface CommodityItem {
+  id: string;
+  sku: string;
+  name: string;
+  category: string;
+  brand: string | null;
+  price: string | number;
+  unit: string;
+  size: string | number;
+  image: string | null;
+  description: string | null;
+  marketType: string;
+  isActive: boolean;
+}
 
 type Step = "category" | "type" | "size" | "quantity" | "date" | "review";
 
 interface GoalData {
   category: string;
   commodityType: string;
-  selectedCommodity: (typeof COMMODITIES)[0] | null;
+  selectedCommodity: CommodityItem | null;
   quantity: number;
   targetDate: string;
 }
@@ -78,6 +57,56 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<Step>("category");
   const [isLoading, setIsLoading] = useState(false);
+  const [commodities, setCommodities] = useState<CommodityItem[]>([]);
+  const [isLoadingCommodities, setIsLoadingCommodities] = useState(true);
+
+  // Grouping logic based on fetched commodities
+  const groupedCommodities = commodities.reduce(
+    (acc, commodity) => {
+      if (!acc[commodity.category]) {
+        acc[commodity.category] = [];
+      }
+      acc[commodity.category].push(commodity);
+      return acc;
+    },
+    {} as Record<string, CommodityItem[]>,
+  );
+
+  const categories = Object.keys(groupedCommodities);
+
+  const getCommodityTypes = (category: string) => {
+    const comms = groupedCommodities[category] || [];
+    const uniqueTypes = new Map<string, CommodityItem>();
+
+    comms.forEach((commodity) => {
+      if (!uniqueTypes.has(commodity.name)) {
+        uniqueTypes.set(commodity.name, commodity);
+      }
+    });
+
+    return Array.from(uniqueTypes.values());
+  };
+
+  const getSizeVariants = (category: string, commodityName: string) => {
+    const comms = groupedCommodities[category] || [];
+    return comms.filter((c) => c.name === commodityName);
+  };
+
+  useEffect(() => {
+    async function fetchCommodities() {
+      try {
+        const res = await axios.get('/api/commodities?type=SAVINGS');
+        setCommodities(res.data);
+      } catch (error) {
+        console.error("Failed to load commodities", error);
+      } finally {
+        setIsLoadingCommodities(false);
+      }
+    }
+    if (isOpen && commodities.length === 0) {
+      fetchCommodities();
+    }
+  }, [isOpen, commodities.length]);
 
   const [goalData, setGoalData] = useState<GoalData>({
     category: "",
@@ -124,7 +153,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
     setCurrentStep("size");
   };
 
-  const handleSizeSelect = (commodity: (typeof COMMODITIES)[0]) => {
+  const handleSizeSelect = (commodity: CommodityItem) => {
     setGoalData({ ...goalData, selectedCommodity: commodity });
     setCurrentStep("quantity");
   };
@@ -134,16 +163,23 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
       toast.error("Quantity must be between 1 and 10");
       return;
     }
+    
+    if (!goalData.targetDate) {
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + 90);
+      setGoalData(prev => ({
+        ...prev,
+        targetDate: targetDate.toISOString().split("T")[0],
+      }));
+    }
     setCurrentStep("date");
   };
 
   const handleDateSelect = () => {
-    const targetDate = new Date();
-    targetDate.setDate(targetDate.getDate() + 90);
-    setGoalData({
-      ...goalData,
-      targetDate: targetDate.toISOString().split("T")[0],
-    });
+    if (!goalData.targetDate) {
+      toast.error("Please select a target date");
+      return;
+    }
     setCurrentStep("review");
   };
 
@@ -170,9 +206,9 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
         name: `${goalData.quantity}x ${commodity.name} (${commodity.size}${commodity.unit})`,
         commodityType: commodity.sku,
         image: commodity.image,
-        goalAmount: commodity.price * goalData.quantity,
+        goalAmount: Number(commodity.price) * goalData.quantity,
         targetDate: goalData.targetDate,
-        regularTopUp: Math.round((commodity.price * goalData.quantity) / 10),
+        regularTopUp: Math.round((Number(commodity.price) * goalData.quantity) / 10),
         description: commodity.description,
       });
 
@@ -277,7 +313,17 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
             {/* Step 1: Category Selection */}
             {currentStep === "category" && (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {categories.map((category) => (
+                {isLoadingCommodities ? (
+                  <div className="col-span-full py-12 text-center text-muted-foreground flex flex-col items-center">
+                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+                    Loading available options...
+                  </div>
+                ) : categories.length === 0 ? (
+                  <div className="col-span-full py-12 text-center text-muted-foreground">
+                    No items available at the moment.
+                  </div>
+                ) : (
+                  categories.map((category) => (
                   <Card
                     key={category}
                     className={cn(
@@ -308,7 +354,8 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                       </p>
                     </div>
                   </Card>
-                ))}
+                  ))
+                )}
               </div>
             )}
 
@@ -412,7 +459,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                         </div>
                         <div className="pt-2 border-t">
                           <p className="text-lg font-bold text-primary">
-                            ₦{commodity.price.toLocaleString()}
+                            ₦{Number(commodity.price).toLocaleString()}
                           </p>
                         </div>
                       </div>
@@ -470,7 +517,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                     <div className="p-4 bg-primary/10 rounded-xl border border-primary/20 flex justify-between items-center">
                       <span className="text-muted-foreground">Total Goal Amount:</span>
                       <span className="text-xl font-bold text-primary">
-                        ₦{(goalData.selectedCommodity.price * goalData.quantity).toLocaleString()}
+                        ₦{(Number(goalData.selectedCommodity.price) * goalData.quantity).toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -486,7 +533,14 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
             )}
 
             {/* Step 4: Target Date Selection */}
-            {currentStep === "date" && (
+            {currentStep === "date" && (() => {
+              const today = new Date();
+              const todayStr = today.toISOString().split("T")[0];
+              const maxDate = new Date();
+              maxDate.setDate(today.getDate() + 90);
+              const maxDateStr = maxDate.toISOString().split("T")[0];
+
+              return (
               <div className="space-y-4">
                 <Button
                   variant="ghost"
@@ -499,9 +553,21 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                 </Button>
                 <div className="max-w-md mx-auto space-y-6">
                   <div className="p-6 bg-primary/10 rounded-xl border border-primary/20">
-                    <p className="text-center text-foreground font-medium leading-relaxed text-[15px]">
-                      Secure the best price. Don't let rising food costs surprise you later.
+                    <p className="text-center text-foreground font-medium leading-relaxed text-[15px] mb-4">
+                      We lock in today's price for you for up to 90 days. This protects your savings against inflation and ensures rising food costs won't surprise you later.
                     </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="target-date">Select Target Date (Max 90 Days)</Label>
+                      <Input
+                        id="target-date"
+                        type="date"
+                        min={todayStr}
+                        max={maxDateStr}
+                        value={goalData.targetDate}
+                        onChange={(e) => setGoalData({ ...goalData, targetDate: e.target.value })}
+                        className="w-full h-12"
+                      />
+                    </div>
                   </div>
                   <Button
                     className="w-full"
@@ -512,7 +578,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                   </Button>
                 </div>
               </div>
-            )}
+            )})()}
 
             {/* Step 5: Review & Confirm */}
             {currentStep === "review" && goalData.selectedCommodity && (
@@ -571,7 +637,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                             Target Amount
                           </p>
                           <p className="font-semibold text-primary text-lg">
-                            ₦{(goalData.selectedCommodity.price * goalData.quantity).toLocaleString()}
+                            ₦{(Number(goalData.selectedCommodity.price) * goalData.quantity).toLocaleString()}
                           </p>
                         </div>
                         <div>
@@ -598,7 +664,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                         <p className="font-semibold text-sm">
                           ₦
                           {Math.round(
-                            (goalData.selectedCommodity.price * goalData.quantity) / 10,
+                            (Number(goalData.selectedCommodity.price) * goalData.quantity) / 10,
                           ).toLocaleString()}
                         </p>
                       </div>
