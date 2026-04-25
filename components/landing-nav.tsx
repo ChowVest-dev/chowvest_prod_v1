@@ -35,7 +35,7 @@ export function LandingNav() {
               Features
             </Link>
             <Button asChild>
-              <Link href="/auth">Get Started</Link>
+              <Link href="/">Get Started</Link>
             </Button>
           </div>
 
