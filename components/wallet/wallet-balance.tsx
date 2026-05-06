@@ -31,7 +31,6 @@ export function WalletBalance({ wallet }: WalletProps) {
 
   return (
     <Card
-      data-onboarding-id="deposit-button"
       className="p-6 bg-linear-to-br from-primary to-secondary text-primary-foreground relative overflow-hidden"
     >
       <div className="absolute top-0 right-0 w-64 h-64 bg-primary-foreground/5 rounded-full -translate-y-1/2 translate-x-1/2" />

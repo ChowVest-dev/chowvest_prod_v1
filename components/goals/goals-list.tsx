@@ -186,7 +186,7 @@ export function GoalsList({ baskets, balance, onUpdate }: GoalsListProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-onboarding-id="goals-list">
       {/* Tabs */}
       <div className="flex bg-muted/30 p-1 w-full max-w-md rounded-[10px] border border-border">
         <button

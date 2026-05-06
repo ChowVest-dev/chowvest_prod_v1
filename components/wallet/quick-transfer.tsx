@@ -89,7 +89,7 @@ export function QuickTransfer({ baskets, balance }: QuickTransferProps) {
   };
 
   return (
-    <Card className="p-6">
+    <Card className="p-6" data-onboarding-id="quick-transfer">
       <h3 className="text-xl font-semibold text-foreground mb-6">
         Quick Transfer
       </h3>

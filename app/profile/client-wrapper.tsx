@@ -22,11 +22,13 @@ export function ProfileClient({ stats }: ProfileClientProps) {
   return (
     <div className="container mx-auto px-4 md:px-6 space-y-6 pt-4 md:pt-20 pb-24 md:pb-8 mt-2 md:mt-6">
       <ProfileHeader user={session.user} />
-      <ProfileStats
-        completedHarvests={stats.completedHarvests}
-        totalSaved={stats.totalSaved}
-        createdAt={session.user.createdAt}
-      />
+      <div data-onboarding-id="profile-stats">
+        <ProfileStats
+          completedHarvests={stats.completedHarvests}
+          totalSaved={stats.totalSaved}
+          createdAt={session.user.createdAt}
+        />
+      </div>
       <ProfileSettings user={session.user} />
     </div>
   );

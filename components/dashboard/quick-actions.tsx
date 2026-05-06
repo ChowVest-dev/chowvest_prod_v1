@@ -22,7 +22,7 @@ export function QuickActions() {
 
   return (
     <>
-      <Card className="p-6">
+      <Card className="p-6" data-onboarding-id="quick-actions">
         <h3 className="text-xl font-semibold text-foreground mb-4">Quick Actions</h3>
         <div className="space-y-3">
           <Button

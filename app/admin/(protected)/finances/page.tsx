@@ -44,6 +44,15 @@ export default async function AdminFinancesPage({ searchParams }: { searchParams
 
   const flaggedTransactions = transactions.filter(t => t.isFlagged);
 
+  const statusBadgeClass: Record<string, string> = {
+    PENDING:    "bg-yellow-100 text-yellow-800 border-yellow-200",
+    PROCESSING: "bg-blue-100 text-blue-800 border-blue-200",
+    COMPLETED:  "bg-green-100 text-green-800 border-green-200",
+    FAILED:     "bg-red-100 text-red-800 border-red-200",
+    CANCELLED:  "bg-gray-100 text-gray-800 border-gray-200",
+    REVERSED:   "bg-orange-100 text-orange-800 border-orange-200",
+  };
+
   // Reusable transaction table with Variance breakdown
   const renderTransactionTable = (txs: typeof transactions) => (
     <div className="overflow-x-auto w-full">
@@ -70,9 +79,14 @@ export default async function AdminFinancesPage({ searchParams }: { searchParams
                     <ArrowUpRight className="w-4 h-4 text-red-500" />
                   )}
                   <div className="flex flex-col gap-0.5">
-                    <span className="font-semibold">
-                      {tx.type === "DELIVERY_FEE" ? "DELIVERY FEE" : tx.type.replace(/_/g, ' ')}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold">
+                        {tx.type === "DELIVERY_FEE" ? "DELIVERY FEE" : tx.type.replace(/_/g, ' ')}
+                      </span>
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${statusBadgeClass[tx.status] ?? "bg-gray-100 text-gray-700 border-gray-200"}`}>
+                        {tx.status}
+                      </span>
+                    </div>
                     <span className="text-xs font-mono text-muted-foreground">ID: {tx.id.split("-").pop() || tx.id.slice(0, 8)}</span>
                     {tx.processorTransactionId && (
                       <span className="text-[10px] text-muted-foreground font-mono">EXT: {tx.processorTransactionId}</span>
@@ -185,7 +199,7 @@ export default async function AdminFinancesPage({ searchParams }: { searchParams
           </div>
           <div className="rounded-xl border bg-green-500/10 border-green-500/20 shadow-sm p-5">
             <p className="text-xs text-green-700 font-medium uppercase tracking-wide flex items-center gap-1">
-              <TrendingUp className="w-3.5 h-3.5" /> Net Revenue
+              <TrendingUp className="w-3.5 h-3.5" /> Variance
             </p>
             <p className="text-2xl font-bold mt-1 font-mono text-green-600">₦{netRevenue.toLocaleString()}</p>
             <p className="text-xs text-green-700/70 mt-1">After processor deductions</p>

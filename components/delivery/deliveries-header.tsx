@@ -4,7 +4,7 @@ import { Truck } from "lucide-react";
 
 export function DeliveriesHeader() {
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4" data-onboarding-id="deliveries-header">
       <div className="flex items-center gap-4">
         <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
           <Truck className="w-7 h-7 text-primary" />

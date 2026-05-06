@@ -19,7 +19,7 @@ export function GoalsHeader({
   const hasActivity = completedGoalsCount > 0 || activeDeliveriesCount > 0;
 
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-2">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-2" data-onboarding-id="goals-header">
       <div className="flex items-center gap-4">
         <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center shadow-inner">
           <ShoppingBasket className="w-7 h-7 text-primary" />
