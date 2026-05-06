@@ -11,11 +11,10 @@ const poolConfig = {
   ssl: {
     rejectUnauthorized: false,
   },
-  // Serverless needs MINIMAL connections
-  max: process.env.NODE_ENV === "production" ? 1 : 5,
-  min: 0, // No minimum connections in serverless
-  idleTimeoutMillis: 10000, // Reduced idle timeout
-  connectionTimeoutMillis: 5000, // Faster timeout for serverless
+  max: process.env.NODE_ENV === "production" ? 3 : 5,
+  min: 0,
+  idleTimeoutMillis: 10000,
+  connectionTimeoutMillis: 8000,
   allowExitOnIdle: true,
 };
 

@@ -22,36 +22,94 @@ interface OnboardingStep {
 }
 
 const STEPS: OnboardingStep[] = [
+  // --- DASHBOARD ---
+  {
+    id: "total-saved",
+    path: "/dashboard",
+    headline: "Your Total Savings",
+    description: "This is the total value of all the food items you've secured so far against inflation.",
+  },
   {
     id: "wallet-balance",
     path: "/dashboard",
-    headline: "Your Wallet",
-    description: "Your Chow Wallet. The first step to a full basket.",
+    headline: "Wallet Balance",
+    description: "Your ready-to-use cash. Use this to top up your baskets or buy directly from the market.",
   },
+  {
+    id: "active-baskets",
+    path: "/dashboard",
+    headline: "Your Active Baskets",
+    description: "Monitor your ongoing savings goals. Once a basket is 100% full, it's ready for delivery!",
+  },
+  {
+    id: "quick-actions",
+    path: "/dashboard",
+    headline: "Fast Actions",
+    description: "Quickly fund your wallet or request a delivery for your completed baskets from here.",
+  },
+
+  // --- WALLET ---
   {
     id: "deposit-button",
     path: "/wallet",
-    headline: "Quick Funding",
-    description: "Secure your food budget instantly via card or bank transfer.",
+    headline: "Add Funds",
+    description: "Click here to fund your wallet instantly via card or bank transfer.",
+  },
+  {
+    id: "transaction-history",
+    path: "/wallet",
+    headline: "Activity Log",
+    description: "Track every deposit, transfer, and purchase you've made within the app.",
+  },
+  {
+    id: "quick-transfer",
+    path: "/wallet",
+    headline: "Move Funds",
+    description: "Easily move money from your wallet into any of your active food baskets.",
+  },
+
+  // --- MY BASKET ---
+  {
+    id: "goals-header",
+    path: "/basket-goals",
+    headline: "Basket Overview",
+    description: "See a summary of your savings and how many baskets are ready for delivery.",
   },
   {
     id: "create-target-button",
     path: "/basket-goals",
-    headline: "Price Protection",
-    description: "Pick your essentials and lock in today's price.",
+    headline: "Start a New Goal",
+    description: "Pick a new commodity and start saving towards it at today's locked-in price.",
   },
   {
-    id: "goal-progress-bar",
+    id: "goals-list",
     path: "/basket-goals",
-    headline: "Fill Your Basket",
-    description: "Hit 100% and we'll bring it home.",
+    headline: "Track Progress",
+    description: "Monitor exactly how much you've saved and how close you are to completing each goal.",
   },
+
+  // --- DELIVERIES ---
   {
-    id: "market-grid",
+    id: "deliveries-header",
+    path: "/deliveries",
+    headline: "Live Tracking",
+    description: "Follow your filled baskets as they leave our warehouse and head to your doorstep.",
+  },
+
+  // --- MARKET ---
+  {
+    id: "market-header",
     path: "/market",
-    headline: "The Market",
-    description:
-      "Buy food commodities directly from your wallet balance.",
+    headline: "Direct Marketplace",
+    description: "Soon you'll be able to bypass the savings goals and buy food items for immediate delivery.",
+  },
+
+  // --- PROFILE ---
+  {
+    id: "profile-stats",
+    path: "/profile",
+    headline: "Your Milestones",
+    description: "Check your historical achievements and overall savings growth over time.",
   },
 ];
 
@@ -59,9 +117,11 @@ const PADDING = 12;
 const TOOLTIP_WIDTH = 320;
 const TOOLTIP_HEIGHT_ESTIMATE = 280;
 
-function waitForElement(id: string, timeout = 4000): Promise<Element | null> {
+function waitForElement(id: string, timeout = 6000): Promise<Element | null> {
   return new Promise((resolve) => {
     const selector = `[data-onboarding-id="${id}"]`;
+    
+    // Check immediately
     const existing = document.querySelector(selector);
     if (existing) {
       resolve(existing);
@@ -69,6 +129,7 @@ function waitForElement(id: string, timeout = 4000): Promise<Element | null> {
     }
 
     const deadline = Date.now() + timeout;
+    let rafId: number;
 
     const check = () => {
       const el = document.querySelector(selector);
@@ -77,13 +138,14 @@ function waitForElement(id: string, timeout = 4000): Promise<Element | null> {
         return;
       }
       if (Date.now() > deadline) {
+        console.warn(`Onboarding: Element ${id} not found after ${timeout}ms`);
         resolve(null);
         return;
       }
-      requestAnimationFrame(check);
+      rafId = requestAnimationFrame(check);
     };
 
-    requestAnimationFrame(check);
+    rafId = requestAnimationFrame(check);
   });
 }
 
@@ -174,14 +236,33 @@ export function OnboardingTour() {
       if (el) {
         // Scroll element into view if needed
         el.scrollIntoView({ block: "center", behavior: "smooth" });
-        await new Promise((r) => setTimeout(r, 300));
+        
+        // Wait longer for smooth scroll and rendering
+        await new Promise((r) => setTimeout(r, 600));
+        
+        // Final rect capture
         setSpotlightRect(getSpotlightRect(el));
+      } else {
+        setSpotlightRect(null);
       }
 
       setIsNavigating(false);
     },
     [router]
   );
+
+  // Poll for rect updates to ensure highlight stays synced even if layout shifts
+  useEffect(() => {
+    if (!mounted || user?.hasCompletedOnboarding) return;
+    
+    const interval = setInterval(() => {
+      if (activeElRef.current) {
+        setSpotlightRect(getSpotlightRect(activeElRef.current));
+      }
+    }, 500);
+    
+    return () => clearInterval(interval);
+  }, [mounted, user?.hasCompletedOnboarding]);
 
   // Activate first step when component becomes relevant
   useEffect(() => {

@@ -120,7 +120,7 @@ function BasketGoalsClientInner({
             onUpdate={handleRefresh}
           />
         </div>
-        <div className="order-1 lg:order-2">
+        <div className="order-1 lg:order-2" data-onboarding-id="create-target-button">
           <CreateGoalCard onGoalCreated={handleRefresh} />
         </div>
       </div>

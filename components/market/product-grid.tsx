@@ -62,7 +62,19 @@ export function ProductGrid() {
   }
 
   return (
-    <div data-onboarding-id="market-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="relative">
+      {/* Coming Soon Overlay */}
+      <div className="absolute inset-0 z-20 bg-background/40 backdrop-blur-[4px] rounded-3xl flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-border/50">
+        <div className="w-16 h-16 rounded-full bg-card shadow-xl flex items-center justify-center mb-4 animate-bounce">
+          <ShoppingCart className="w-8 h-8 text-primary" />
+        </div>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Marketplace Coming Soon</h2>
+        <p className="text-muted-foreground max-w-sm">
+          We&apos;re stocking up our warehouse with premium commodities! Soon you&apos;ll be able to buy directly with instant delivery.
+        </p>
+      </div>
+
+      <div data-onboarding-id="market-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-40 grayscale-[0.5] pointer-events-none select-none">
       {products.map((product) => (
         <Card
           key={product.id}
@@ -132,6 +144,7 @@ export function ProductGrid() {
           </div>
         </Card>
       ))}
+      </div>
     </div>
   );
 }

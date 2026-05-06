@@ -21,6 +21,7 @@ export function WalletHeader() {
         </div>
         <div className="flex items-center gap-3">
           <Button
+            data-onboarding-id="deposit-button"
             variant="outline"
             className="gap-2 bg-transparent"
             onClick={() => setDepositModalOpen(true)}

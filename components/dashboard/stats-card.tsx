@@ -46,6 +46,8 @@ export function StatsCards({
             className="p-6 bg-gradient-to-br from-card to-accent/20 border-border/50"
             {...(stat.label === "Wallet Balance"
               ? { "data-onboarding-id": "wallet-balance" }
+              : stat.label === "Total Saved"
+              ? { "data-onboarding-id": "total-saved" }
               : {})}
           >
             <div className="flex items-start justify-between">

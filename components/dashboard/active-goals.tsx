@@ -23,7 +23,7 @@ export function ActiveGoals({ baskets }: ActiveGoalsProps) {
   const router = useRouter();
 
   return (
-    <Card className="p-6">
+    <Card className="p-6" data-onboarding-id="active-baskets">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-xl font-semibold text-foreground">
