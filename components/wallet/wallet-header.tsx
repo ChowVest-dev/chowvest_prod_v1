@@ -3,6 +3,7 @@
 import { ArrowDownToLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DepositModal } from "@/components/wallet/deposit-modal";
+import { FeatureDisabledOverlay } from "@/components/maintenance/FeatureDisabledOverlay";
 import { useState } from "react";
 
 export function WalletHeader() {
@@ -19,17 +20,19 @@ export function WalletHeader() {
             Manage your funds and transactions
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button
-            data-onboarding-id="deposit-button"
-            variant="outline"
-            className="gap-2 bg-transparent"
-            onClick={() => setDepositModalOpen(true)}
-          >
-            <ArrowDownToLine className="w-4 h-4" />
-            Deposit
-          </Button>
-        </div>
+        <FeatureDisabledOverlay feature="deposits">
+          <div className="flex items-center gap-3">
+            <Button
+              data-onboarding-id="deposit-button"
+              variant="outline"
+              className="gap-2 bg-transparent"
+              onClick={() => setDepositModalOpen(true)}
+            >
+              <ArrowDownToLine className="w-4 h-4" />
+              Deposit
+            </Button>
+          </div>
+        </FeatureDisabledOverlay>
       </div>
 
       <DepositModal open={depositModalOpen} onOpenChange={setDepositModalOpen} />
