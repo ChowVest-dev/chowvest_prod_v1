@@ -43,10 +43,11 @@ export interface CommodityItem {
   isActive: boolean;
 }
 
-type Step = "category" | "type" | "size" | "quantity" | "date" | "review";
+type Step = "category" | "type" | "subtype" | "size" | "quantity" | "date" | "review";
 
 interface GoalData {
   category: string;
+  highLevelType: string;
   commodityType: string;
   selectedCommodity: CommodityItem | null;
   quantity: number;
@@ -74,17 +75,49 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
 
   const categories = Object.keys(groupedCommodities);
 
-  const getCommodityTypes = (category: string) => {
+  // For Rice: returns high-level types ["Local", "Foreign"]
+  // For other categories: returns unique commodity names as-is
+  const getHighLevelTypes = (category: string) => {
     const comms = groupedCommodities[category] || [];
-    const uniqueTypes = new Map<string, CommodityItem>();
 
+    if (category === "Rice") {
+      const types: { label: string; image: string; count: number }[] = [];
+      const localComms = comms.filter((c) => c.name === "Local rice");
+      const foreignComms = comms.filter((c) => c.name.includes("foreign"));
+
+      if (localComms.length > 0) {
+        types.push({ label: "Local", image: localComms[0].image || "/rice.jpg", count: localComms.length });
+      }
+      if (foreignComms.length > 0) {
+        types.push({ label: "Foreign", image: foreignComms[0].image || "/rice.jpg", count: foreignComms.length });
+      }
+      return types;
+    }
+
+    // For non-Rice categories, return unique commodity names
+    const uniqueTypes = new Map<string, { label: string; image: string; count: number }>();
     comms.forEach((commodity) => {
       if (!uniqueTypes.has(commodity.name)) {
-        uniqueTypes.set(commodity.name, commodity);
+        const variants = comms.filter((c) => c.name === commodity.name);
+        uniqueTypes.set(commodity.name, {
+          label: commodity.name,
+          image: commodity.image || "",
+          count: variants.length,
+        });
       }
     });
-
     return Array.from(uniqueTypes.values());
+  };
+
+  // For Foreign rice: returns sub-types (Short grain, Long grain)
+  const getSubTypes = (category: string) => {
+    const comms = groupedCommodities[category] || [];
+    const foreignComms = comms.filter((c) => c.name.includes("foreign"));
+    const uniqueNames = new Map<string, CommodityItem>();
+    foreignComms.forEach((c) => {
+      if (!uniqueNames.has(c.name)) uniqueNames.set(c.name, c);
+    });
+    return Array.from(uniqueNames.values());
   };
 
   const getSizeVariants = (category: string, commodityName: string) => {
@@ -110,16 +143,18 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
 
   const [goalData, setGoalData] = useState<GoalData>({
     category: "",
+    highLevelType: "",
     commodityType: "",
     selectedCommodity: null,
     quantity: 1,
-      targetDate: "",
-    });
+    targetDate: "",
+  });
 
   const resetModal = () => {
     setCurrentStep("category");
     setGoalData({
       category: "",
+      highLevelType: "",
       commodityType: "",
       selectedCommodity: null,
       quantity: 1,
@@ -138,13 +173,46 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
     setGoalData({
       ...goalData,
       category,
+      highLevelType: "",
       commodityType: "",
       selectedCommodity: null,
     });
     setCurrentStep("type");
   };
 
-  const handleTypeSelect = (commodityName: string) => {
+  const handleTypeSelect = (typeLabel: string) => {
+    // For Rice "Local" → set commodityType directly and go to size
+    // For Rice "Foreign" → go to subtype step
+    // For non-Rice → set commodityType directly and go to size
+    if (goalData.category === "Rice" && typeLabel === "Foreign") {
+      setGoalData({
+        ...goalData,
+        highLevelType: typeLabel,
+        commodityType: "",
+        selectedCommodity: null,
+      });
+      setCurrentStep("subtype");
+    } else if (goalData.category === "Rice" && typeLabel === "Local") {
+      setGoalData({
+        ...goalData,
+        highLevelType: typeLabel,
+        commodityType: "Local rice",
+        selectedCommodity: null,
+      });
+      setCurrentStep("size");
+    } else {
+      // Non-Rice categories: typeLabel IS the commodity name
+      setGoalData({
+        ...goalData,
+        highLevelType: typeLabel,
+        commodityType: typeLabel,
+        selectedCommodity: null,
+      });
+      setCurrentStep("size");
+    }
+  };
+
+  const handleSubTypeSelect = (commodityName: string) => {
     setGoalData({
       ...goalData,
       commodityType: commodityName,
@@ -184,7 +252,11 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
   };
 
   const handleBack = () => {
-    const stepOrder: Step[] = ["category", "type", "size", "quantity", "date", "review"];
+    // Build the step order dynamically based on whether subtype was used
+    const usedSubtype = goalData.category === "Rice" && goalData.highLevelType === "Foreign";
+    const stepOrder: Step[] = usedSubtype
+      ? ["category", "type", "subtype", "size", "quantity", "date", "review"]
+      : ["category", "type", "size", "quantity", "date", "review"];
     const currentIndex = stepOrder.indexOf(currentStep);
     if (currentIndex > 0) {
       setCurrentStep(stepOrder[currentIndex - 1]);
@@ -233,6 +305,8 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
         return "What are you stocking up on?";
       case "type":
         return "Choose your preferred item";
+      case "subtype":
+        return "What grain type?";
       case "size":
         return "How much do you need?";
       case "quantity":
@@ -252,6 +326,8 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
         return "Pick a food group to start your basket";
       case "type":
         return "Select the specific brand or variety";
+      case "subtype":
+        return "Choose between short grain or long grain";
       case "size":
         return "Choose a size that fits your needs";
       case "quantity":
@@ -340,7 +416,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                               ? "/Rice-1.jpg"
                               : category === "Beans"
                                 ? "/Bean-3.webp"
-                                : "/Garri-2.jpg"
+                                : "/rice.jpg"
                           }
                           alt={category}
                           width={64}
@@ -359,7 +435,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
               </div>
             )}
 
-            {/* Step 2: Commodity Type Selection */}
+            {/* Step 2: Type Selection */}
             {currentStep === "type" && goalData.category && (
               <div className="space-y-4">
                 <Button
@@ -372,7 +448,57 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                   Back to Categories
                 </Button>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {getCommodityTypes(goalData.category).map((commodity) => (
+                  {getHighLevelTypes(goalData.category).map((type) => (
+                    <Card
+                      key={type.label}
+                      className={cn(
+                        "p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-105",
+                        goalData.highLevelType === type.label &&
+                          "ring-2 ring-primary",
+                      )}
+                      onClick={() => handleTypeSelect(type.label)}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 rounded-lg bg-accent/50 flex items-center justify-center overflow-hidden">
+                          {type.image ? (
+                            <Image
+                              src={type.image}
+                              alt={type.label}
+                              width={64}
+                              height={64}
+                              className="object-cover"
+                            />
+                          ) : (
+                            <span className="text-2xl">📦</span>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold">{type.label}</h3>
+                          <p className="text-xs text-muted-foreground">
+                            {type.count} sizes available
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Step 2.5: Sub-type Selection (Foreign Rice only) */}
+            {currentStep === "subtype" && goalData.category === "Rice" && (
+              <div className="space-y-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleBack}
+                  className="mb-2"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Type
+                </Button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {getSubTypes(goalData.category).map((commodity) => (
                     <Card
                       key={commodity.sku}
                       className={cn(
@@ -380,7 +506,7 @@ export function CreateGoalCard({ onGoalCreated }: CreateGoalCardProps) {
                         goalData.commodityType === commodity.name &&
                           "ring-2 ring-primary",
                       )}
-                      onClick={() => handleTypeSelect(commodity.name)}
+                      onClick={() => handleSubTypeSelect(commodity.name)}
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-16 h-16 rounded-lg bg-accent/50 flex items-center justify-center overflow-hidden">

@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import { Toaster } from "@/components/ui/sonner";
+import { MaintenanceBanner } from "@/components/maintenance/MaintenanceBanner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,6 +31,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <MaintenanceBanner />
         <Toaster />
         <Providers>
           {children}

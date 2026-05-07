@@ -10,6 +10,15 @@ const MAX_TRANSFER_AMOUNT = 1_000_000; // ₦1,000,000 hard cap
 
 export async function POST(req: NextRequest) {
   try {
+    // ─── Feature Kill Switch ───
+    const { getFeatureFlags } = await import("@/lib/feature-flags");
+    if (!getFeatureFlags().withdrawals) {
+      return NextResponse.json(
+        { error: "Transfers are temporarily unavailable. Please try again later." },
+        { status: 503 }
+      );
+    }
+
     const session = await getSession();
 
     if (!session?.user) {

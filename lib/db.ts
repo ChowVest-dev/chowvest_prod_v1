@@ -11,6 +11,7 @@ const poolConfig = {
   ssl: {
     rejectUnauthorized: false,
   },
+   // Serverless needs MINIMAL connections
   max: process.env.NODE_ENV === "production" ? 3 : 5,
   min: 0,
   idleTimeoutMillis: 10000,

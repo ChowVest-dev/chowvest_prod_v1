@@ -29,6 +29,15 @@ const RIDERS = [
 
 export async function POST(req: NextRequest) {
   try {
+    // ─── Feature Kill Switch ───
+    const { getFeatureFlags } = await import("@/lib/feature-flags");
+    if (!getFeatureFlags().market) {
+      return NextResponse.json(
+        { error: "Deliveries are temporarily unavailable. Please try again later." },
+        { status: 503 }
+      );
+    }
+
     const session = await getSession();
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
