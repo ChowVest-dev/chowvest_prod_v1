@@ -17,6 +17,23 @@ const authRoutes = ["/auth"];
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // ─── Hard Kill Switch: Maintenance Mode ───
+  // When MAINTENANCE_MODE=true, redirect all user-facing routes to /maintenance.
+  // Admin panel, API routes (webhooks, cron), and static assets are excluded.
+  if (process.env.MAINTENANCE_MODE === "true") {
+    const isExcluded =
+      pathname === "/" ||
+      pathname === "/maintenance" ||
+      pathname.startsWith("/admin") ||
+      pathname.startsWith("/api") ||
+      pathname.startsWith("/_next") ||
+      pathname.startsWith("/favicon");
+
+    if (!isExcluded) {
+      return NextResponse.rewrite(new URL("/maintenance", req.url));
+    }
+  }
+
   // Get access token from cookies
   const accessToken = req.cookies.get("access_token")?.value;
 
@@ -50,11 +67,13 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/dashboard/:path*",
-    "/wallet/:path*",
-    "/profile/:path*",
-    "/basket-goals/:path*",
-    "/market/:path*",
-    "/auth/:path*",
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization)
+     * - favicon.ico, sitemap.xml, robots.txt
+     * - Public assets (images, fonts, etc.)
+     */
+    "/((?!_next/static|_next/image|favicon\\.ico|sitemap\\.xml|robots\\.txt|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot)).*)",
   ],
 };
